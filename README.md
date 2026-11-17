@@ -1,262 +1,219 @@
-# Papyrus
+# QuestionSpace
 
-Your textbooks are full of facts. Papyrus finds them and turns them into questions.
+**An illustrated space quiz expedition.** Every question is a planet. Answer it and the
+world inks itself into your atlas for good; miss it and the signal keeps singing until you
+come back for another look.
 
-Upload any PDF. In seconds, you get a quiz with multiple choice, matching, and short answer questions. The app even handles charts and math formulas.
+[**Play it on GitHub Pages →**](https://abhinav-prabhakar.github.io/QuestionSpace/)
 
-![Papyrus Screenshot](./screenshot.png)
+![QuestionSpace launch screen](docs/01-launch.png)
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+---
 
-## Features
+## The idea
 
-### Core Functionality
-- **PDF Processing**: Upload PDFs and automatically extract text content
-- **AI Question Generation**: Uses LLMs (OpenAI compatible APIs) to generate diverse question types
-- **Vision Detection**: Detects pages that may need visual analysis (images, diagrams, charts)
-- **Batch Processing**: Processes large PDFs in batches to handle documents of any size
+Most quiz apps turn learning into a progress bar. QuestionSpace turns it into a place.
 
-### Question Types
-- **Multiple Choice**: 4-option questions with single correct answer
-- **Multi Select**: Multiple correct answers allowed
-- **True/False**: Simple factual verification
-- **Short Answer**: Brief text responses (1-2 sentences)
-- **Fill in the Blank**: Key term and formula testing
-- **Matching**: Pair relationships between concepts
-- **Ordering**: Sequence and process arrangement
+Twelve worlds sit in four hand-drawn constellations. At the start the atlas is a quiet
+sky of rumours: dim planets, faint pencil lines, one small ship docked at Meridian
+Station. As you answer, planets brighten, stickers appear, constellation lines ink in, and
+the ship hops from world to world. A glance at the map tells you what you actually know —
+not how far through a list you are.
 
-### Quiz Features
-- **Full LaTeX Support**: Mathematical expressions render correctly throughout
-- **Editable Questions**: Modify, add, or delete questions after generation
-- **Difficulty Levels**: Questions tagged as easy, medium, or hard
-- **Topic Organization**: Automatic topic extraction and categorization
+A wrong answer is **not** a lost life. It is a sample that came back unusual: the planet
+stays on the map as a **signal**, and you can fly back to it later.
 
-### Quiz Taking Experience
-- **Stopwatch Timer**: Track elapsed time during quizzes
-- **Answer Persistence**: Close tab and return to continue where you left off
-- **Question Navigator**: Jump to any question during the quiz
-- **Progress Indicators**: Visual feedback on answered questions
+| Launch | Question |
+| --- | --- |
+| ![Launch](docs/01-launch.png) | ![Question](docs/02-question.png) |
 
-### Results & Export
-- **Comprehensive Results**: Score breakdown by question, topic, and points
-- **Confetti Animation**: Celebrate achievements (70%+ scores)
-- **JSON Export**: Export quizzes as structured JSON files
-- **Anki/TSV Export**: Import directly into Anki flashcard app
+| Correct | Discovery |
+| --- | --- |
+| ![Correct](docs/03-correct.png) | ![Discovery](docs/04-discovery.png) |
 
-### UI/UX
-- **Dark & Light Mode**: Full theme support toggle
-- **Drag & Drop Upload**: Intuitive file upload interface
-- **Real-time Progress**: Comprehensive processing indicators showing:
-  - Current page being processed
-  - Processing stage (text extraction, vision detection, generation, validation)
-  - Overall completion percentage
+---
 
-### LLM Configuration
-- **API Key Rotation**: Round-robin multiple API keys for high-volume processing
-- **Retry Logic**: 3 automatic retries with exponential backoff
-- **Configurable**: All settings via environment variables
-- **Compatible**: Works with OpenAI and OpenAI-compatible APIs
+## What's on the atlas
 
-## Architecture
+- **Twelve illustrated worlds**, each drawn by hand in SVG: a ringed gas giant, an ocean
+  world, red and grey rock worlds, a metallic asteroid, two ice moons, a hazy orange
+  moon, a spiral galaxy, a lensed cluster, and a deep field.
+- **Four constellations** — MESSENGER (orbital mechanics), DAEDALUS (propulsion),
+  HUBBLE (deep field), GALILEO (exobiology). Each is a trio of worlds joined by a faint
+  triangle that inks itself in once you know its members.
+- **World states that read without colour**: uncharted worlds are muted with a dashed
+  halo; charted worlds get a mint check sticker; mastered worlds get an amber star; a
+  missed world keeps a coral signal ring; the current world gets a dashed amber orbit,
+  a glow, and the ship hovering above it.
+- **A ship that flies** between worlds on a curved trail, plus Meridian Station, a
+  wandering comet, and seeded starfields and nebulae.
+- **A world card** on tap/click: who lives there, what the region studies, whether the
+  signal is due back, and a shortcut to track it.
 
-### Tech Stack
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 with custom design system
-- **UI Components**: Custom components following design system
-- **PDF Processing**: pdf-parse for text extraction
-- **Icons**: Lucide React
+---
 
-### Project Structure
-```
-app/
-├── globals.css          # Design system with dark/light themes
-├── layout.tsx           # Root layout with theme provider
-└── page.tsx             # Main application
+## The loop
 
-components/
-├── theme-provider.tsx   # Dark/light mode management
-├── file-upload.tsx      # Drag & drop file upload
-├── processing-indicator.tsx  # Real-time progress display
-├── quiz-editor.tsx      # Full quiz editing interface
-├── quiz-interface.tsx   # Quiz taking experience
-└── quiz-results.tsx     # Results with confetti
+The question loop is deliberately instant. Animation happens at the *start* and *end* of
+a question, never between reading the choices and answering.
 
-lib/
-├── llm-client.ts        # AI API client with retries & rotation
-├── pdf-processor.ts     # PDF parsing and batch processing
-└── storage.ts           # localStorage persistence & exports
+1. **Read and answer.** Four choices, instant feedback. Correct answers stay charted.
+2. **Spend fuel on optionality.** Fuel is a hint currency, never health — no answer can
+   drain it or end the run.
+   - **Scan** (−1): a whisper of a hint plus two ruled-out choices.
+   - **Skip world** (−2): leave the world as a signal and fly on.
+   - **Retry sample** (−1): after a miss, reopen the same question once.
+   - Every third world charted salvages one fuel cell (start 5, cap 8).
+3. **Lean on the crew.** Four collectible one-shot perks, each with a personality:
+   - **Pip**, navigator — free skip.
+   - **Bolt**, engineer — +2 fuel.
+   - **Dr.Vela**, science — free scan.
+   - **Moss**, medic — free retry after a miss.
+   You start with Pip and Bolt. Safe and risky lanes at junctions recruit Vela or Moss;
+   a duplicate recruit becomes +1 fuel instead.
+4. **Pick a lane.** At two junctions the route forks: the **Quiet Belt** is the
+   lowest-difficulty remaining world and pays +1 fuel; the **Ion Storm** is the hardest
+   and pays +2. Clean passes only — a miss still leaves a signal.
+5. **Follow the signal.** A miss or skip schedules an anomaly (`due` after 3 worlds, then
+   further out on each return). When it is due, **T** opens it as a detour; you return to
+   the same spot on the route afterwards. At the debrief you can revisit every unresolved
+   signal in a new pass, keeping the same crew, fuel, and chart.
+6. **Debrief.** A captain's log is generated from the run and can be shared or copied.
+   The chart, region breakdown, remaining signals, and crew manifest are all there.
 
-types/
-└── index.ts             # TypeScript type definitions
-```
+| Scan | Crew perk |
+| --- | --- |
+| ![Scan](docs/05-scan.png) | ![Crew](docs/06-crew.png) |
 
-## Getting Started
+| Junction | Signal due |
+| --- | --- |
+| ![Branch](docs/07-branch.png) | ![Signal](docs/11-signal.png) |
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- OpenAI API key(s)
+| Captain's log | Detour |
+| --- | --- |
+| ![Debrief](docs/10-debrief.png) | ![Detour](docs/12-detour.png) |
 
-### Installation
+---
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/papyrus-ai.git
-cd papyrus-ai
-```
+## Controls
 
-2. Install dependencies:
+| Action | Key |
+| --- | --- |
+| Answer A–D | `1`–`4` or `A`–`D` |
+| Scan | `H` |
+| Skip world | `S` |
+| Retry sample | `R` |
+| Track a due signal | `T` |
+| Fly on | `Enter` / `Space` |
+| Choose lane | `1` (quiet) / `2` (storm) |
+| Close world card | `Esc` |
+
+Touch: tap a planet for its card, tap a choice to answer, then the wide **Fly to…**
+button. On mobile the atlas sits above the question sheet and scrolls with the page.
+
+---
+
+## Accessibility
+
+- **Colour never carries meaning alone.** Feedback pairs a glyph, a word, a border style,
+  and a colour. Planet states have distinct silhouettes, stickers, and rings.
+- **Full keyboard play**, including the atlas (`Tab` to a world, `Enter` to open it) and
+  every action button.
+- **Visible focus** on paper (dark ring) and sky (amber ring); the prompt itself is focused
+  programmatically but does not show a ring on arrival.
+- **Reduced motion** honours `prefers-reduced-motion` and an in-app Motion switch. Under
+  either, the ship jump-cuts, trails and blooms are suppressed, and landing advances in
+  80 ms.
+- **Screen readers** get a live status region for answers, hints, signals, and crew, plus
+  the full atlas described per world.
+- **Contrast audit** (`npm run check:contrast`) checks every shipped text pair, including
+  alpha-composited stamps and eliminated choices. All pairs pass their WCAG target.
+- Skip link to the console, 44 px touch targets, and no hover-only information.
+
+---
+
+## Stack
+
+- **React 19 + TypeScript + Vite** — no animation library, no state library. The run is a
+  pure reducer; flight and landing are ephemeral UI state.
+- **Hand-drawn type**: Shantell Sans (display), Patrick Hand (body), IBM Plex Mono
+  (labels), all self-hosted through Fontsource. No font CDN.
+- **SVG illustration**: planets, moons, rings, galaxy arms, constellations, station, ship.
+  All art is inline and scales cleanly; the starfield is a seeded SVG field.
+- **Web Audio** for the ambient hum, radio chatter, and small feedback pings. Audio starts
+  from a user gesture and can be switched off at any time.
+- **localStorage** persists the expedition (`questionspace.session.v2`), sound, and motion
+  preferences. A v1 save is discarded safely.
+
+---
+
+## Run it
+
 ```bash
 npm install
+npm run dev        # http://127.0.0.1:5173
 ```
 
-3. Configure environment variables:
 ```bash
-cp env.sample .env.local
+npm run check      # typecheck + 25 tests + contrast audit
+npm run build      # production build
+npm run preview    # preview the built app
 ```
 
-Edit `.env.local` with your settings:
-```env
-# Comma-separated list of API keys for round-robin rotation
-LLM_API_KEYS=sk-your-first-api-key,sk-your-second-api-key,sk-your-third-api-key
+The production base path is `/QuestionSpace/` for GitHub Pages; the dev server uses `/`.
 
-# API Base URL (OpenAI or compatible)
-LLM_API_BASE_URL=https://api.openai.com/v1
+---
 
-# Model name
-LLM_MODEL=gpt-4o-mini
+## Deploy
 
-# Processing settings
-LLM_MAX_RETRIES=3
-LLM_TIMEOUT=60000
-PDF_BATCH_SIZE=5
+Pushing to `main` runs `.github/workflows/deploy.yml`:
+
+1. `npm ci`
+2. `npm run check`
+3. `npm run build`
+4. upload `dist/` and deploy with GitHub Pages
+
+Pages is configured with **GitHub Actions** as its source. The live site is
+<https://abhinav-prabhakar.github.io/QuestionSpace/>.
+
+---
+
+## Project map
+
+```text
+src/
+  App.tsx                 phase routing, keyboard map, flight/landing, SR status
+  components/
+    StarMap.tsx           illustrated atlas: planets, constellations, station, world card
+    Console.tsx           question loop, choices, scan/skip/retry, feedback readout
+    Briefing.tsx          launch screen, crew intro, rules
+    Branch.tsx            quiet/storm lane choice
+    Debrief.tsx           stats, captain's log, anomalies, revisit/reset
+    CrewDock.tsx          one-shot crew popover
+    TopBar.tsx            brand, sound, motion
+  data/expedition.ts      worlds, coordinates, questions, crew, routes
+  lib/
+    session.ts            reducer, selectors, persistence (schema v2)
+    log.ts                shareable captain's log
+    audio.ts              Web Audio ambience and SFX
+    geometry.ts           arcs, wobbly circles, sketched lines
+  styles.css              hand-drawn design system, atlas, responsive, reduced motion
+scripts/
+  check-contrast.mjs      WCAG audit of the shipped palette
+  cdp.mjs                 headless Chrome screenshot harness
+docs/                     screenshots used above
 ```
 
-4. Run the development server:
-```bash
-npm run dev
-```
+Questions live in `src/data/expedition.ts`; adding a world means a question object plus a
+`map` coordinate and a `LOOKS` entry for its planet art.
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+---
 
-## Configuration
+## Screenshots
 
-### Environment Variables
+| Mobile launch | Mobile question |
+| --- | --- |
+| ![Mobile launch](docs/08-mobile-launch.png) | ![Mobile question](docs/09-mobile-question.png) |
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LLM_API_KEYS` | Comma-separated API keys | Required |
-| `LLM_API_BASE_URL` | API endpoint URL | `https://api.openai.com/v1` |
-| `LLM_MODEL` | Model to use | `gpt-4o-mini` |
-| `LLM_MAX_RETRIES` | Retry attempts for failed calls | `3` |
-| `LLM_TIMEOUT` | API timeout in ms | `60000` |
-| `PDF_BATCH_SIZE` | Pages per batch processing | `5` |
-
-### PDF Batch Size Recommendations
-
-| Document Size | Recommended Batch Size |
-|--------------|----------------------|
-| Small (< 10 pages) | 3-5 |
-| Medium (10-50 pages) | 5-10 |
-| Large (50+ pages) | 10-15 |
-
-Smaller batches = more API calls but better context
-Larger batches = fewer API calls but may miss details
-
-## Usage
-
-### Creating a Quiz
-
-1. **Upload PDF**: Drag and drop or click to select a PDF file
-2. **Processing**: Monitor real-time progress as the AI:
-   - Extracts text from pages
-   - Analyzes content complexity
-   - Generates questions in batches
-   - Validates and deduplicates
-3. **Edit**: Review and modify generated questions
-4. **Save**: Store quiz for future use
-
-### Taking a Quiz
-
-1. Select a quiz from your library
-2. Answer questions at your own pace
-3. Navigate freely between questions
-4. Submit when ready
-5. Review detailed results
-
-### Exporting
-
-- **JSON**: Complete quiz data for backup or sharing
-- **Anki TSV**: Direct import into Anki flashcards with:
-  - Front: Question text
-  - Back: Answer + explanation
-  - Tags: Topic categories
-
-## Design System
-
-Papyrus follows a "terminal-at-night" aesthetic with:
-
-### Colors
-- **Background**: `#0a0a09` (dark) / `#fafaf9` (light)
-- **Foreground**: `#fcfcfc` (dark) / `#1a1a1a` (light)
-- **Accent**: `#cca133` (gold/amber)
-- **Muted**: `#737373`
-- **Borders**: `#333333` (dark) / `#d4d4d4` (light)
-
-### Typography
-- **Primary**: System UI font stack
-- **Handwritten**: Caveat (for annotations)
-- **Monospace**: ui-monospace (for code/timers)
-
-### Components
-- **Buttons**: Rounded-full with gold accent
-- **Cards**: Rounded-xl with subtle borders
-- **Glass panels**: Backdrop blur for overlays
-
-## API Integration
-
-The LLM client supports any OpenAI-compatible API:
-
-```typescript
-import { LLMClient } from '@/lib/llm-client';
-
-const client = new LLMClient({
-  apiKeys: ['sk-...'],
-  baseUrl: 'https://api.openai.com/v1',
-  model: 'gpt-4o-mini',
-  maxRetries: 3,
-  timeout: 60000,
-  batchSize: 5,
-});
-
-const result = await client.generateQuestions(pages);
-```
-
-## Storage & Persistence
-
-All data is stored locally in the browser:
-
-- **Quizzes**: Indexed by ID with full metadata
-- **Sessions**: Auto-saved progress during quiz taking
-- **Exports**: File downloads for portability
-
-No server-side storage required.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Acknowledgments
-
-- Built with [Next.js](https://nextjs.org)
-- Icons by [Lucide](https://lucide.dev)
-- PDF parsing with [pdf-parse](https://www.npmjs.com/package/pdf-parse)
+Screenshots are captured at 1440×900 (2× for mobile) with `scripts/cdp.mjs` against a
+headless Chrome.
