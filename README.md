@@ -1,7 +1,7 @@
 # QuestionSpace
 
 **An illustrated space quiz expedition.** Every question is a planet. Answer it and the
-world inks itself into your atlas for good; miss it and the signal keeps singing until you
+world inks itself into your chart for good; miss it and the signal keeps singing until you
 come back for another look.
 
 [**Play it on GitHub Pages →**](https://abhinav-prabhakar.github.io/QuestionSpace/)
@@ -12,16 +12,22 @@ come back for another look.
 
 ## The idea
 
-Most quiz apps turn learning into a progress bar. QuestionSpace turns it into a place.
+Most quiz apps turn learning into a progress bar. QuestionSpace turns it into a place — and
+puts you inside it.
 
-Twelve worlds sit in four hand-drawn constellations. At the start the atlas is a quiet
-sky of rumours: dim planets, faint pencil lines, one small ship docked at Meridian
-Station. As you answer, planets brighten, stickers appear, constellation lines ink in, and
-the ship hops from world to world. A glance at the map tells you what you actually know —
-not how far through a list you are.
+The left panel is the ship's observation window. You look out from the co-pilot's seat:
+a hand-drawn brass frame, rivets, a scratched pane of glass, stars and nebulae beyond. The
+world ahead fills the window, rings and moons and all. When you fly on, the old world slides
+past, the stars streak, and the next planet swells into view. There is no third-person map
+to look down at.
 
-A wrong answer is **not** a lost life. It is a sample that came back unusual: the planet
-stays on the map as a **signal**, and you can fly back to it later.
+Knowledge lives on the **nav chart** taped to the dash below the window. Twelve worlds in
+four regions, dim when unknown, inked when charted, starred when mastered, ringed in coral
+when a signal is still out there. One glance tells you what you know and which corner of the
+sky is still dark.
+
+A wrong answer is **not** a lost life. It is a sample that came back unusual: the world
+stays on the chart as a **signal**, and you can fly back to it later.
 
 | Launch | Question |
 | --- | --- |
@@ -33,22 +39,25 @@ stays on the map as a **signal**, and you can fly back to it later.
 
 ---
 
-## What's on the atlas
+## The observation deck
 
-- **Twelve illustrated worlds**, each drawn by hand in SVG: a ringed gas giant, an ocean
-  world, red and grey rock worlds, a metallic asteroid, two ice moons, a hazy orange
-  moon, a spiral galaxy, a lensed cluster, and a deep field.
-- **Four constellations** — MESSENGER (orbital mechanics), DAEDALUS (propulsion),
-  HUBBLE (deep field), GALILEO (exobiology). Each is a trio of worlds joined by a faint
-  triangle that inks itself in once you know its members.
-- **World states that read without colour**: uncharted worlds are muted with a dashed
-  halo; charted worlds get a mint check sticker; mastered worlds get an amber star; a
-  missed world keeps a coral signal ring; the current world gets a dashed amber orbit,
-  a glow, and the ship hovering above it.
-- **A ship that flies** between worlds on a curved trail, plus Meridian Station, a
-  wandering comet, and seeded starfields and nebulae.
-- **A world card** on tap/click: who lives there, what the region studies, whether the
-  signal is due back, and a shortcut to track it.
+- **A first-person window.** One world at a time, seen large: a ringed gas giant, an ocean
+  world, red and grey rock worlds, a metallic asteroid, two ice moons, a hazy orange moon,
+  a spiral galaxy, a lensed cluster, and a deep field. Every surface is inline SVG with
+  hand-drawn bands, craters, ice cracks, galaxy arms, rings, and moons.
+- **Arrival and departure.** A planet rises into the window as you arrive; the last world
+  slides past as you leave, with a short field of warp streaks between. At a route junction
+  the window shows both lanes — the calm world on the left, the storm world on the right,
+  their routes bending away from the ship.
+- **A brass nameplate** in the corner of the pane: region, world name, what the survey is,
+  and where you are in the run. Meridian Station gets its own plate, docked and undocked.
+- **Hazards read without colour.** A signal world keeps a coral dashed ring around it; a
+  due signal lights a coral lamp in the glass. The nav chart repeats the same mark.
+- **The nav chart.** Four region columns, three worlds each, with counts per region. Every
+  world is a button: its planet glyph, name, and survey tag, with a mint check or amber
+  star sticker once it is known. Uncharted worlds keep a dashed halo and a muted glyph.
+- **A world card** on tap/click: what the region studies, the world's status, when its
+  signal returns, and a shortcut to track it when it is due.
 
 ---
 
@@ -108,24 +117,25 @@ a question, never between reading the choices and answering.
 | Choose lane | `1` (quiet) / `2` (storm) |
 | Close world card | `Esc` |
 
-Touch: tap a planet for its card, tap a choice to answer, then the wide **Fly to…**
-button. On mobile the atlas sits above the question sheet and scrolls with the page.
+Touch: tap a world on the nav chart for its card, tap a choice to answer, then the wide
+**Fly to…** button. On mobile the observation deck sits above the question sheet and
+scrolls with the page.
 
 ---
 
 ## Accessibility
 
 - **Colour never carries meaning alone.** Feedback pairs a glyph, a word, a border style,
-  and a colour. Planet states have distinct silhouettes, stickers, and rings.
-- **Full keyboard play**, including the atlas (`Tab` to a world, `Enter` to open it) and
-  every action button.
+  and a colour. Chart states have distinct silhouettes, stickers, halos, and rings.
+- **Full keyboard play**, including the nav chart (`Tab` to a world button, `Enter` to open
+  it) and every action button.
 - **Visible focus** on paper (dark ring) and sky (amber ring); the prompt itself is focused
   programmatically but does not show a ring on arrival.
 - **Reduced motion** honours `prefers-reduced-motion` and an in-app Motion switch. Under
-  either, the ship jump-cuts, trails and blooms are suppressed, and landing advances in
-  80 ms.
+  either, the window jump-cuts between worlds, warp streaks and landing blooms are
+  suppressed, and landing advances in 80 ms.
 - **Screen readers** get a live status region for answers, hints, signals, and crew, plus
-  the full atlas described per world.
+  the full chart described per world.
 - **Contrast audit** (`npm run check:contrast`) checks every shipped text pair, including
   alpha-composited stamps and eliminated choices. All pairs pass their WCAG target.
 - Skip link to the console, 44 px touch targets, and no hover-only information.
@@ -135,11 +145,12 @@ button. On mobile the atlas sits above the question sheet and scrolls with the p
 ## Stack
 
 - **React 19 + TypeScript + Vite** — no animation library, no state library. The run is a
-  pure reducer; flight and landing are ephemeral UI state.
+  pure reducer; arrival, departure, and landing are ephemeral UI state.
 - **Hand-drawn type**: Shantell Sans (display), Patrick Hand (body), IBM Plex Mono
   (labels), all self-hosted through Fontsource. No font CDN.
-- **SVG illustration**: planets, moons, rings, galaxy arms, constellations, station, ship.
-  All art is inline and scales cleanly; the starfield is a seeded SVG field.
+- **SVG illustration**: the observation window (worlds, rings, moons, nebulae, station,
+  ship) and the nav chart are inline SVG. The starfield is seeded, so it is stable between
+  renders.
 - **Web Audio** for the ambient hum, radio chatter, and small feedback pings. Audio starts
   from a user gesture and can be switched off at any time.
 - **localStorage** persists the expedition (`questionspace.session.v2`), sound, and motion
@@ -182,22 +193,21 @@ Pages is configured with **GitHub Actions** as its source. The live site is
 
 ```text
 src/
-  App.tsx                 phase routing, keyboard map, flight/landing, SR status
+  App.tsx                 phase routing, keyboard map, travel/landing, SR status
   components/
-    StarMap.tsx           illustrated atlas: planets, constellations, station, world card
+    StarMap.tsx           observation window: worlds, station, junction, nav chart, card
     Console.tsx           question loop, choices, scan/skip/retry, feedback readout
     Briefing.tsx          launch screen, crew intro, rules
     Branch.tsx            quiet/storm lane choice
     Debrief.tsx           stats, captain's log, anomalies, revisit/reset
     CrewDock.tsx          one-shot crew popover
     TopBar.tsx            brand, sound, motion
-  data/expedition.ts      worlds, coordinates, questions, crew, routes
+  data/expedition.ts      worlds, questions, crew, routes
   lib/
     session.ts            reducer, selectors, persistence (schema v2)
     log.ts                shareable captain's log
     audio.ts              Web Audio ambience and SFX
-    geometry.ts           arcs, wobbly circles, sketched lines
-  styles.css              hand-drawn design system, atlas, responsive, reduced motion
+  styles.css              hand-drawn design system, window, chart, responsive, motion
 scripts/
   check-contrast.mjs      WCAG audit of the shipped palette
   cdp.mjs                 headless Chrome screenshot harness
@@ -205,7 +215,7 @@ docs/                     screenshots used above
 ```
 
 Questions live in `src/data/expedition.ts`; adding a world means a question object plus a
-`map` coordinate and a `LOOKS` entry for its planet art.
+`LOOKS` entry in `StarMap.tsx` for its planet art.
 
 ---
 

@@ -106,7 +106,7 @@ svg {
   outline-offset: 2px;
 }
 
-.atlas :focus-visible,
+.deck :focus-visible,
 .topbar :focus-visible {
   outline-color: var(--amber);
 }
@@ -338,434 +338,677 @@ svg {
 }
 
 /* --------------------------------------------------------------------------
-   Star atlas
-   A hand-illustrated night sky: planets, moons, galaxies, and ink.
+   Observation deck
+   A first-person window, a chart table, and a little brass.
    -------------------------------------------------------------------------- */
 
-.atlas {
+.deck {
   position: sticky;
   top: 14px;
   height: calc(100dvh - 108px);
   min-height: 620px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 10px;
   background:
-    radial-gradient(120% 90% at 76% 6%, rgba(46, 64, 108, 0.62), transparent 62%),
-    radial-gradient(90% 70% at 10% 90%, rgba(96, 62, 124, 0.28), transparent 66%),
-    radial-gradient(80% 60% at 88% 84%, rgba(34, 96, 106, 0.22), transparent 62%),
-    linear-gradient(180deg, #0b1324 0%, #0a1120 52%, #080e1b 100%);
+    radial-gradient(120% 80% at 78% 4%, rgba(46, 64, 108, 0.55), transparent 60%),
+    radial-gradient(90% 70% at 8% 96%, rgba(96, 62, 124, 0.22), transparent 64%),
+    linear-gradient(180deg, #101a2e 0%, #0a1220 58%, #080e1b 100%);
   border: 2px solid var(--edge-dark);
   border-radius: 22px 28px 20px 30px / 28px 20px 30px 22px;
-  box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.3), inset 0 0 90px rgba(7, 12, 23, 0.65);
+  box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.3), inset 0 0 90px rgba(7, 12, 23, 0.6);
   overflow: hidden;
   isolation: isolate;
 }
 
-.atlas::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(243, 236, 220, 0.05);
-}
-
-.atlas-sky {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(300px 220px at 82% 22%, rgba(155, 211, 230, 0.08), transparent 70%),
-    radial-gradient(280px 220px at 16% 74%, rgba(192, 176, 255, 0.07), transparent 70%),
-    radial-gradient(rgba(243, 236, 220, 0.08) 0.7px, transparent 0.7px);
-  background-size: auto, auto, 24px 24px;
-  opacity: 0.75;
-}
-
-.atlas-head {
-  position: relative;
-  z-index: 2;
+.deck-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 15px 20px 2px;
+  gap: 10px;
+  padding: 1px 6px 0;
 }
 
-.atlas-kicker {
-  margin: 0 0 1px;
+.deck-id {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-hand);
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--chalk-3);
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
-.atlas-kicker svg {
-  width: 14px;
-  height: 14px;
+.deck-id > svg {
+  width: 21px;
+  height: 21px;
+  flex: none;
+  margin-top: 3px;
   color: var(--amber);
 }
 
-.atlas-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 27px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--chalk);
-}
-
-.atlas-sub {
-  margin: 3px 0 0;
+.deck-kicker {
+  margin: 0 0 1px;
   font-family: var(--font-hand);
-  font-size: 14px;
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
   color: var(--chalk-3);
 }
 
-.atlas-tally {
-  margin: 4px 0 0;
+.deck-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--chalk);
+}
+
+.deck-tally {
+  margin: 2px 0 0;
   display: flex;
   align-items: baseline;
   gap: 5px;
-  padding: 5px 11px 6px;
+  padding: 4px 10px 5px;
   border: 1.5px dashed rgba(243, 236, 220, 0.22);
   border-radius: 999px 900px 999px 880px / 900px 999px 880px 999px;
   background: rgba(7, 12, 23, 0.42);
   font-family: var(--font-hand);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--chalk-2);
   white-space: nowrap;
-  transform: rotate(-1.2deg);
+  transform: rotate(-1.1deg);
 }
 
-.atlas-tally b {
+.deck-tally b {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--amber);
 }
 
-.atlas-tally-dot {
+.deck-tally-dot {
   color: var(--chalk-3);
 }
 
-.atlas-svg {
+/* The window ------------------------------------------------------------ */
+
+.viewport {
   position: relative;
-  z-index: 1;
   flex: 1 1 auto;
   min-height: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+  border: 2px solid rgba(243, 236, 220, 0.24);
+  border-radius: 20px 26px 18px 28px / 26px 18px 28px 20px;
+  background: #060b16;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 60px rgba(3, 7, 15, 0.92),
+    inset 0 0 0 6px rgba(10, 17, 31, 0.9),
+    0 3px 0 rgba(0, 0, 0, 0.35);
 }
 
-/* Constellations --------------------------------------------------------- */
+.viewport-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 
-.constellation-name {
+.viewport-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(116deg, transparent 34%, rgba(255, 255, 255, 0.05) 44%, transparent 52%),
+    radial-gradient(120% 90% at 50% 50%, transparent 58%, rgba(3, 7, 15, 0.5) 100%);
+  mix-blend-mode: screen;
+  opacity: 0.8;
+}
+
+.rivet {
+  position: absolute;
+  z-index: 4;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #f4dfb4, #a3854f 55%, #4a3a20 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.rivet--tl {
+  top: 8px;
+  left: 8px;
+}
+
+.rivet--tr {
+  top: 8px;
+  right: 8px;
+}
+
+.rivet--bl {
+  bottom: 8px;
+  left: 8px;
+}
+
+.rivet--br {
+  bottom: 8px;
+  right: 8px;
+}
+
+.deck-plate {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 3;
+  max-width: min(76%, 430px);
+  padding: 8px 13px 10px;
+  background: linear-gradient(180deg, rgba(9, 15, 27, 0.9), rgba(7, 12, 23, 0.8));
+  border: 1.5px solid rgba(243, 236, 220, 0.26);
+  border-radius: 11px 15px 10px 14px / 14px 10px 15px 11px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(3px);
+}
+
+.deck-plate::before {
+  content: '';
+  position: absolute;
+  top: -1.5px;
+  left: 12px;
+  width: 34px;
+  height: 3px;
+  background: var(--amber);
+  border-radius: 2px;
+}
+
+.plate-kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-3);
+}
+
+.plate-name {
+  margin: 2px 0 1px;
   font-family: var(--font-display);
-  font-size: 21px;
-  font-weight: 660;
-  letter-spacing: 0.13em;
+  font-size: 27px;
+  font-weight: 720;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #fff8e9;
+}
+
+.plate-sub {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 14px;
+  line-height: 1.25;
+  color: var(--chalk-2);
+}
+
+.signal-lamp {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px 5px 8px;
+  font-family: var(--font-hand);
+  font-size: 13.5px;
+  color: #ffdad3;
+  background: rgba(141, 51, 35, 0.34);
+  border: 1.5px solid rgba(255, 141, 122, 0.65);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.signal-lamp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  box-shadow: 0 0 0 3px rgba(255, 141, 122, 0.16);
+  animation: lampPulse 2.4s ease-in-out infinite;
+}
+
+/* Worlds in the window -------------------------------------------------- */
+
+.big-world {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: planetArrive 1.05s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.big-world.is-leaving {
+  animation: planetDepart 0.52s ease-out both;
+}
+
+.big-world.is-leaving .big-ring,
+.big-world.is-leaving .big-moons {
+  display: none;
+}
+
+.big-signal circle:first-child {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: signalTurn 26s linear infinite;
+}
+
+.warp line {
+  stroke: rgba(243, 236, 220, 0.5);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 96 190;
+  animation: warpStreak 0.72s linear both;
+}
+
+.warp line:nth-child(3n) {
+  stroke: rgba(255, 209, 102, 0.55);
+  stroke-width: 1.8;
+  stroke-dasharray: 130 240;
+}
+
+.warp line:nth-child(2n) {
+  stroke-dasharray: 64 150;
+}
+
+.land-ring {
+  fill: none;
+  stroke-width: 2.4;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: landBloom 0.82s ease-out both;
+}
+
+.land-ring--late {
+  animation-delay: 0.1s;
+}
+
+.viewport.is-still .big-world,
+.viewport.is-still .big-signal circle:first-child,
+.viewport.is-still .signal-lamp-dot {
+  animation: none;
+}
+
+.junc-name {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 700;
+  fill: #fff8e9;
   paint-order: stroke;
-  stroke: rgba(7, 12, 23, 0.8);
+  stroke: rgba(7, 12, 23, 0.92);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+.junc-sub {
+  font-family: var(--font-hand);
+  font-size: 15px;
+  fill: var(--chalk-3);
+  paint-order: stroke;
+  stroke: rgba(7, 12, 23, 0.92);
   stroke-width: 4px;
   stroke-linejoin: round;
 }
 
-.constellation-note {
-  font-family: var(--font-hand);
-  font-size: 13.5px;
-  fill: var(--chalk-3);
-  paint-order: stroke;
-  stroke: rgba(7, 12, 23, 0.85);
-  stroke-width: 3px;
-  stroke-linejoin: round;
+/* The chart table ------------------------------------------------------- */
+
+.chart-paper {
+  position: relative;
+  flex: none;
+  padding: 9px 12px 10px;
+  background:
+    radial-gradient(140% 90% at 10% 0%, #fffaf0, transparent 55%),
+    var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-paper);
+  box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.34);
+  transform: rotate(-0.25deg);
 }
 
-.station-label {
-  font-family: var(--font-hand);
-  font-size: 17px;
-  fill: var(--chalk-2);
-  paint-order: stroke;
-  stroke: rgba(7, 12, 23, 0.8);
-  stroke-width: 3.5px;
-  stroke-linejoin: round;
+.chart-paper::before,
+.chart-paper::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  width: 54px;
+  height: 14px;
+  background: rgba(255, 209, 102, 0.66);
+  border: 1px solid rgba(27, 36, 55, 0.24);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
-.station-sub {
+.chart-paper::before {
+  left: 24px;
+  transform: rotate(-2.6deg);
+}
+
+.chart-paper::after {
+  right: 24px;
+  transform: rotate(2deg);
+}
+
+.chart-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1.5px dashed rgba(27, 36, 55, 0.2);
+}
+
+.chart-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.chart-progress {
+  margin: 0;
   font-family: var(--font-hand);
   font-size: 12.5px;
-  fill: var(--chalk-3);
-  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  white-space: nowrap;
 }
 
-/* Worlds ----------------------------------------------------------------- */
-
-.world {
-  cursor: pointer;
-  outline: none;
-}
-
-.world-hit {
-  fill: transparent;
-  pointer-events: all;
-}
-
-.world-focus {
-  fill: none;
-  stroke: transparent;
-  stroke-width: 2.4;
-}
-
-.world:focus-visible .world-focus {
-  stroke: var(--amber);
-  stroke-width: 2.6;
-  stroke-dasharray: 3 5;
-}
-
-.world:focus-visible .world-label {
-  fill: #fff8e9;
-}
-
-.world-art {
-  transition: opacity 0.2s ease, filter 0.2s ease;
-}
-
-.world--uncharted .world-art {
-  opacity: 0.58;
-  filter: saturate(0.78) brightness(0.9);
-}
-
-.world--mastered .world-art {
-  filter: drop-shadow(0 0 10px rgba(255, 209, 102, 0.22));
-}
-
-.world.is-active .world-art {
-  filter: drop-shadow(0 0 18px rgba(255, 209, 102, 0.4));
-}
-
-.world--charted .world-art {
-  filter: drop-shadow(0 0 8px rgba(99, 230, 195, 0.14));
-}
-
-.world:hover .world-art {
-  opacity: 1;
-  filter: brightness(1.08);
-}
-
-.world-label {
-  font-family: var(--font-hand);
-  font-size: 21px;
-  fill: var(--chalk);
-  paint-order: stroke;
-  stroke: rgba(7, 12, 23, 0.92);
-  stroke-width: 4.5px;
-  stroke-linejoin: round;
-  pointer-events: none;
-  transition: fill 0.16s ease;
-}
-
-.world-label.is-active {
-  font-size: 26px;
-  fill: #fff8e9;
-  stroke-width: 5px;
-}
-
-.world:hover .world-label {
-  fill: #fff8e9;
-}
-
-.world--uncharted .world-label {
-  fill: #b9c4d6;
-}
-
-.world-tagline {
-  font-family: var(--font-hand);
+.chart-progress b {
+  font-family: var(--font-display);
   font-size: 13.5px;
-  fill: var(--amber);
-  letter-spacing: 0.02em;
-  paint-order: stroke;
-  stroke: rgba(7, 12, 23, 0.92);
-  stroke-width: 3.5px;
-  stroke-linejoin: round;
+  color: var(--ink);
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 9px;
+  padding-top: 5px;
+}
+
+.chart-region {
+  min-width: 0;
+  padding-left: 9px;
+  border-left: 1.5px dashed rgba(27, 36, 55, 0.16);
+}
+
+.chart-region:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.chart-region-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 0 0 1px;
+}
+
+.chart-region-name {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-region-count {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+}
+
+.cw {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 1px 3px 1px 1px;
+  background: none;
+  color: var(--ink);
+  border: 1.5px solid transparent;
+  border-radius: 8px 11px 7px 10px / 10px 7px 11px 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.cw:hover {
+  background: rgba(27, 36, 55, 0.07);
+}
+
+.cw.is-active {
+  background: rgba(255, 209, 102, 0.3);
+  border-color: rgba(27, 36, 55, 0.28);
+}
+
+.cw.is-selected {
+  border-color: var(--ink);
+}
+
+.cw-art {
+  position: relative;
+  flex: none;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+}
+
+.cw-art > svg {
+  width: 27px;
+  height: 27px;
+  overflow: visible;
+}
+
+.cw--uncharted .cw-art > svg {
+  opacity: 0.5;
+  filter: saturate(0.55);
+}
+
+.cw--uncharted .cw-art::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px dashed rgba(27, 36, 55, 0.34);
+  border-radius: 50%;
   pointer-events: none;
 }
 
-.world-sticker {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: stickerBob 4.6s ease-in-out infinite;
+.cw.is-active .cw-art::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px dashed var(--ink);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.world-orbit {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: orbitDrift 7s ease-in-out infinite;
+.cw.is-active .cw-art::before {
+  display: none;
 }
 
-.world-signal circle {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: signalPulse 3.4s ease-out infinite;
+.cw--anomaly .cw-art::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px dotted var(--bad-edge);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.world-signal circle:nth-child(2) {
-  animation-delay: 0.7s;
+.cw-mark {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 13px;
+  height: 13px;
+  display: grid;
+  place-items: center;
+  border: 1.2px solid var(--ink);
+  border-radius: 50%;
 }
 
-.world-halo {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: haloBreathe 5.2s ease-in-out infinite;
+.cw-mark svg {
+  width: 8px;
+  height: 8px;
 }
 
-/* Fleet ------------------------------------------------------------------ */
-
-.ship--resting {
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
+.cw-mark.is-mastered {
+  background: var(--amber);
+  color: var(--ink);
 }
 
-.ship--resting.is-landing {
-  animation: shipBob 0.36s ease-in-out;
+.cw-mark.is-charted {
+  background: var(--mint);
+  color: #123028;
 }
 
-.ship--moving {
-  filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.45));
+.cw-mark.is-anomaly {
+  background: var(--coral);
+  color: #3a120b;
 }
 
-.flight-trail {
-  stroke: var(--amber);
-  stroke-width: 2.6;
-  stroke-linecap: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: trailDraw 0.92s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0.75;
+.cw-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
 }
 
-.landing-ring {
-  fill: none;
-  stroke-width: 2;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: bloom 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+.cw-name {
+  overflow: hidden;
+  font-family: var(--font-hand);
+  font-size: 12px;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.landing-ring--late {
-  animation-delay: 0.12s;
+.cw-tag {
+  overflow: hidden;
+  font-family: var(--font-hand);
+  font-size: 10px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.landing-spark {
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: spark 0.78s ease-out forwards;
+.cw.is-active .cw-tag {
+  color: #7a4d00;
 }
 
-/* Atlas footer ----------------------------------------------------------- */
+.chart-paper :focus-visible {
+  outline-color: var(--ink);
+  outline-offset: 1px;
+}
 
-.atlas-foot {
-  position: relative;
-  z-index: 2;
+/* Deck footer ----------------------------------------------------------- */
+
+.deck-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 7px;
-  padding: 7px 18px 10px;
-  border-top: 1.5px dashed rgba(243, 236, 220, 0.15);
-  background: linear-gradient(180deg, rgba(7, 12, 23, 0.1), rgba(7, 12, 23, 0.55));
+  gap: 5px;
+  padding: 0 4px;
 }
 
-.atlas-legend {
+.deck-keys {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 5px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.atlas-key {
+.deck-key {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px 3px 6px;
-  border: 1.5px solid rgba(243, 236, 220, 0.17);
+  padding: 2px 8px 2px 5px;
+  border: 1.5px solid rgba(243, 236, 220, 0.16);
   border-radius: 999px 880px 999px 900px / 900px 999px 880px 999px;
   font-family: var(--font-hand);
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--chalk-3);
 }
 
-.atlas-key svg {
-  width: 11px;
-  height: 11px;
-  flex: none;
+.deck-key svg {
+  width: 10px;
+  height: 10px;
 }
 
-.atlas-key b {
+.deck-key b {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--chalk);
 }
 
-.atlas-key--mastered svg {
+.deck-key--mastered svg {
   color: var(--amber);
 }
 
-.atlas-key--charted svg {
+.deck-key--charted svg {
   color: var(--mint);
 }
 
-.atlas-key--anomaly svg {
+.deck-key--anomaly svg {
   color: var(--coral);
 }
 
-.legend-halo {
+.key-halo {
   width: 7px;
   height: 7px;
   flex: none;
-  border: 1.5px dashed #8c99b2;
+  border: 1.4px dashed #8c99b2;
   border-radius: 50%;
 }
 
-.atlas-tip {
+.deck-tip {
   margin: 0;
   display: flex;
   align-items: center;
   gap: 4px;
   font-family: var(--font-hand);
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--chalk-3);
 }
 
-.atlas-tip svg {
-  width: 12px;
-  height: 12px;
+.deck-tip svg {
+  width: 11px;
+  height: 11px;
 }
 
 /* World card ------------------------------------------------------------ */
 
 .world-card {
   position: absolute;
-  right: 16px;
-  bottom: 58px;
-  z-index: 6;
-  width: 272px;
-  padding: 13px 15px 14px;
+  right: 14px;
+  bottom: 52px;
+  z-index: 8;
+  width: 286px;
+  padding: 12px 14px 13px;
   background: var(--paper-2);
   color: var(--ink);
   border: 2px solid var(--ink);
   border-radius: var(--radius-paper);
-  box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.35);
-  transform: rotate(-0.7deg);
+  box-shadow: 6px 7px 0 rgba(0, 0, 0, 0.38);
+  transform: rotate(-0.8deg);
   animation: popIn 0.18s ease-out;
 }
 
@@ -853,7 +1096,7 @@ svg {
   height: 12px;
 }
 
-.node-file-dot {
+.status-dot {
   width: 7px;
   height: 7px;
   border: 1.5px solid currentColor;
@@ -879,6 +1122,84 @@ svg {
 .world-card-action {
   width: 100%;
   margin-top: 9px;
+}
+
+/* Motion ---------------------------------------------------------------- */
+
+@keyframes planetArrive {
+  0% {
+    opacity: 0;
+    transform: scale(0.58) translateY(38px);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes planetDepart {
+  0% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes warpStreak {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -720;
+  }
+}
+
+@keyframes landBloom {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.86);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.5);
+  }
+}
+
+@keyframes lampPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+@keyframes signalTurn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .big-world,
+  .warp line,
+  .land-ring,
+  .signal-lamp-dot,
+  .big-signal circle:first-child {
+    animation: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -2910,11 +3231,11 @@ kbd {
     padding-bottom: 34px;
   }
 
-  .atlas {
+  .deck {
     position: relative;
     top: 0;
-    height: min(64vh, 560px);
-    min-height: 430px;
+    height: min(68vh, 620px);
+    min-height: 500px;
   }
 
   .console-slot {
@@ -3005,95 +3326,194 @@ kbd {
     gap: 20px;
   }
 
-  .atlas {
-    height: min(62vh, 480px);
-    min-height: 380px;
+  .deck {
+    height: min(76vh, 580px);
+    min-height: 460px;
+    gap: 8px;
+    padding: 9px 9px 8px;
     border-radius: 18px 22px 16px 24px / 22px 16px 24px 18px;
     box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.3);
   }
 
-  .atlas-head {
-    padding: 10px 13px 0;
+  .deck-head {
+    padding: 1px 4px 0;
   }
 
-  .atlas-title {
-    font-size: 20px;
+  .deck-id > svg {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
   }
 
-  .atlas-kicker {
+  .deck-kicker {
     font-size: 11px;
   }
 
-  .atlas-sub {
-    display: none;
+  .deck-title {
+    font-size: 20px;
   }
 
-  .atlas-tally {
+  .deck-tally {
     font-size: 11.5px;
     padding: 3px 8px 4px;
   }
 
-  .atlas-tally b {
+  .deck-tally b {
     font-size: 14px;
   }
 
-  .atlas-foot {
-    padding: 5px 11px 7px;
-    gap: 4px;
+  .viewport {
+    border-radius: 16px 20px 14px 22px / 20px 14px 22px 16px;
+    box-shadow:
+      inset 0 0 46px rgba(3, 7, 15, 0.92),
+      inset 0 0 0 4px rgba(10, 17, 31, 0.9),
+      0 2px 0 rgba(0, 0, 0, 0.35);
   }
 
-  .atlas-key {
+  .deck-plate {
+    left: 10px;
+    bottom: 10px;
+    max-width: 80%;
+    padding: 6px 10px 8px;
+  }
+
+  .plate-kicker {
+    font-size: 8px;
+    letter-spacing: 0.11em;
+  }
+
+  .plate-name {
+    font-size: 21px;
+  }
+
+  .plate-sub {
+    font-size: 12.5px;
+  }
+
+  .signal-lamp {
+    top: 10px;
+    right: 10px;
+    padding: 4px 9px 4px 7px;
+    font-size: 12px;
+  }
+
+  .chart-paper {
+    padding: 8px 9px;
+    transform: none;
+  }
+
+  .chart-paper::before {
+    left: 14px;
+  }
+
+  .chart-paper::after {
+    right: 14px;
+  }
+
+  .chart-title {
+    font-size: 9px;
+    letter-spacing: 0.13em;
+  }
+
+  .chart-progress {
+    font-size: 11px;
+  }
+
+  .chart-progress b {
+    font-size: 12px;
+  }
+
+  .chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 10px;
+  }
+
+  .chart-region {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .chart-region:nth-child(even) {
+    padding-left: 10px;
+    border-left: 1.5px dashed rgba(27, 36, 55, 0.16);
+  }
+
+  .chart-region-name {
     font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .chart-region-count {
+    font-size: 8.5px;
+  }
+
+  .cw {
+    gap: 5px;
+    padding: 0 2px 0 0;
+  }
+
+  .cw-art,
+  .cw-art > svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .cw-name {
+    font-size: 11px;
+  }
+
+  .cw-tag {
+    display: none;
+  }
+
+  .cw-mark {
+    top: -1px;
+    right: -2px;
+    width: 11px;
+    height: 11px;
+  }
+
+  .cw-mark svg {
+    width: 7px;
+    height: 7px;
+  }
+
+  .deck-foot {
+    padding: 0 2px;
+  }
+
+  .deck-key {
+    font-size: 10px;
     padding: 2px 6px 2px 4px;
   }
 
-  .atlas-key svg {
+  .deck-key svg {
     width: 9px;
     height: 9px;
   }
 
-  .atlas-key b {
+  .deck-key b {
     font-size: 11px;
   }
 
-  .atlas-tip {
-    display: none;
-  }
-
-  .world-label {
-    font-size: 30px;
-    stroke-width: 5px;
-  }
-
-  .world-label.is-active {
-    font-size: 35px;
-  }
-
-  .world-tagline {
-    display: none;
-  }
-
-  .constellation-name {
-    font-size: 32px;
-  }
-
-  .constellation-note {
-    font-size: 17px;
-  }
-
-  .station-label {
-    font-size: 22px;
-  }
-
-  .station-sub {
+  .deck-tip {
     display: none;
   }
 
   .world-card {
     right: 9px;
     left: 9px;
-    bottom: 48px;
+    bottom: 44px;
     width: auto;
+    padding: 10px 12px 11px;
+  }
+
+  .world-card-title {
+    font-size: 22px;
+  }
+
+  .world-card-note {
+    font-size: 14px;
   }
 
   .console {

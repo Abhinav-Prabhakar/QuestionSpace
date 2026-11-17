@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
 import {
   EXPEDITION,
-  STATION,
   getQuestion,
   getTopic,
   type ChoiceId,
@@ -87,22 +86,15 @@ export default function App() {
     }
   }, [sound])
 
-  /* Launch is a map event: the next question is readable immediately,
-     while the ship arcs to its node alongside it. */
+  /* Departure is a window event: the next question is readable immediately,
+     while the old world slides out and the new one rises into view. */
   useEffect(() => {
     window.clearTimeout(flightTimer.current)
     if (state.phase !== 'underway' || reduced) {
       setFlight(null)
       return
     }
-    const to = getQuestion(activeQuestionId(state)).map
-    const currentMain = state.itinerary[state.cursor]
-    const from = state.detour
-      ? getQuestion(currentMain ?? activeId).map
-      : state.cursor > 0
-        ? getQuestion(state.itinerary[state.cursor - 1]).map
-        : STATION
-    setFlight({ from, to, key: Date.now() })
+    setFlight({ key: Date.now() })
     flightTimer.current = window.setTimeout(() => setFlight(null), 980)
     return () => window.clearTimeout(flightTimer.current)
   }, [state.phase, state.cursor, state.detour?.id, state.itinerary, reduced, activeId])

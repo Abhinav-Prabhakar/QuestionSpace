@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  QUESTIONS,
-  STATION,
+  EXPEDITION,
+  ROUTES,
   TOPICS,
   getQuestion,
   getTopic,
@@ -11,14 +11,13 @@ import {
 } from '../data/expedition'
 import {
   activeQuestionId,
+  dueAnomalyIds,
   expeditionProgress,
   isDue,
   statusOf,
   type ExpeditionState,
   type NodeStatus,
 } from '../lib/session'
-import { flightArc, sketchLine, type Point } from '../lib/geometry'
-import { StarField } from './StarField'
 import {
   AnomalyIcon,
   CheckIcon,
@@ -28,8 +27,7 @@ import {
 } from './Icons'
 
 export interface Flight {
-  from: Point
-  to: Point
+  /** Bumped on every departure, so the window can replay its travel animation. */
   key: number
 }
 
@@ -52,7 +50,7 @@ const STATUS_LABEL: Record<NodeStatus, string> = {
 
 function statusSentence(status: NodeStatus): string {
   if (status === 'mastered') return 'Charted clean on the first pass. This world is inked for good.'
-  if (status === 'charted') return 'Came back from a signal and settled into the map.'
+  if (status === 'charted') return 'Came back from a signal and settled into the chart.'
   if (status === 'anomaly') return 'Sample logged. The signal is still singing out here.'
   return 'Still just a rumour. Fly here to find out what it is.'
 }
@@ -77,8 +75,6 @@ interface WorldLook {
   /** Draw a ring around the world. */
   ring?: boolean
   ringColor?: string
-  /** Where the name sits relative to the world. */
-  labelSide?: 'below' | 'above' | 'right' | 'left'
   moons?: { angle: number; dist: number; r: number; color: string }[]
 }
 
@@ -103,7 +99,6 @@ const LOOKS: Record<string, WorldLook> = {
     deep: '#16465C',
     light: '#BFE9F4',
     kind: 'ocean',
-    labelSide: 'right',
     moons: [{ angle: 210, dist: 36, r: 3.6, color: '#E7DCC6' }],
   },
   'mes-03': {
@@ -119,7 +114,6 @@ const LOOKS: Record<string, WorldLook> = {
     deep: '#454E60',
     light: '#E2E8F0',
     kind: 'rocky',
-    labelSide: 'above',
   },
   'dae-02': {
     r: 29,
@@ -150,7 +144,6 @@ const LOOKS: Record<string, WorldLook> = {
     deep: '#262244',
     light: '#DBD5FF',
     kind: 'deepfield',
-    labelSide: 'above',
   },
   'hub-03': {
     r: 29,
@@ -184,16 +177,13 @@ const LOOKS: Record<string, WorldLook> = {
   },
 }
 
-const REGION_LABEL: Record<TopicId, { x: number; y: number }> = {
-  messenger: { x: 232, y: 136 },
-  daedalus: { x: 768, y: 136 },
-  hubble: { x: 232, y: 512 },
-  galileo: { x: 768, y: 576 },
-}
-
 function lookOf(id: string): WorldLook {
   return LOOKS[id] ?? { r: 24, base: '#9BA8C0', deep: '#3A465E', light: '#E4EBF7', kind: 'rocky' }
 }
+
+/* --------------------------------------------------------------------------
+   Surface art (shared by the big window and the little chart)
+   -------------------------------------------------------------------------- */
 
 function Surface({ look, id }: { look: WorldLook; id: string }) {
   const { r, deep, light, base, kind } = look
@@ -259,7 +249,7 @@ function Surface({ look, id }: { look: WorldLook; id: string }) {
           d={`M ${-r * 0.8} ${-r * 0.5} Q ${-r * 0.1} ${-r * 0.2} ${r * 0.2} ${r * 0.4}`}
           fill="none"
           stroke={deep}
-          strokeWidth="1.4"
+          strokeWidth={Math.max(1.2, r * 0.05)}
           opacity="0.45"
           strokeLinecap="round"
         />
@@ -267,7 +257,7 @@ function Surface({ look, id }: { look: WorldLook; id: string }) {
           d={`M ${-r * 0.2} ${-r * 0.75} Q ${r * 0.1} ${-r * 0.1} ${r * 0.7} ${r * 0.3}`}
           fill="none"
           stroke={deep}
-          strokeWidth="1.2"
+          strokeWidth={Math.max(1.1, r * 0.045)}
           opacity="0.4"
           strokeLinecap="round"
         />
@@ -275,7 +265,7 @@ function Surface({ look, id }: { look: WorldLook; id: string }) {
           d={`M ${-r * 0.7} ${r * 0.35} Q ${-r * 0.2} ${r * 0.5} ${r * 0.25} ${r * 0.78}`}
           fill="none"
           stroke={deep}
-          strokeWidth="1.1"
+          strokeWidth={Math.max(1, r * 0.04)}
           opacity="0.32"
           strokeLinecap="round"
         />
@@ -336,14 +326,14 @@ function Surface({ look, id }: { look: WorldLook; id: string }) {
             ry={r * 0.4}
             fill="none"
             stroke={light}
-            strokeWidth="1.3"
+            strokeWidth="1.5"
             opacity="0.55"
           />
           <path
             d={`M ${-r * 1.2} 0 C ${-r * 0.55} ${-r * 0.72} ${r * 0.55} ${r * 0.74} ${r * 1.2} 0`}
             fill="none"
             stroke={light}
-            strokeWidth="2.4"
+            strokeWidth={Math.max(2, r * 0.02)}
             opacity="0.75"
             strokeLinecap="round"
           />
@@ -351,7 +341,7 @@ function Surface({ look, id }: { look: WorldLook; id: string }) {
             d={`M ${-r * 1.2} 0 C ${-r * 0.42} ${r * 0.62} ${r * 0.46} ${-r * 0.68} ${r * 1.2} 0`}
             fill="none"
             stroke={base}
-            strokeWidth="2.2"
+            strokeWidth={Math.max(2, r * 0.019)}
             opacity="0.85"
             strokeLinecap="round"
           />
@@ -388,7 +378,7 @@ function Surface({ look, id }: { look: WorldLook; id: string }) {
           d={`M ${-r * 0.95} ${r * 0.2} Q ${-r * 0.25} ${-r * 0.55} ${r * 0.9} ${-r * 0.15}`}
           fill="none"
           stroke={light}
-          strokeWidth="1.1"
+          strokeWidth="1.2"
           opacity="0.5"
         />
         <path
@@ -462,8 +452,7 @@ function RockySurface({ look, id }: { look: WorldLook; id: string }) {
 function WorldArt({ look, id }: { look: WorldLook; id: string }) {
   const { r, base, deep, light, kind, ring, ringColor } = look
   const gradientId = `wgrad-${id}`
-  const isGalaxy = kind === 'galaxy'
-  const isCluster = kind === 'cluster' || kind === 'deepfield'
+  const isField = kind === 'galaxy' || kind === 'cluster' || kind === 'deepfield'
 
   return (
     <g className="world-art">
@@ -491,7 +480,7 @@ function WorldArt({ look, id }: { look: WorldLook; id: string }) {
         </g>
       ) : null}
 
-      {isGalaxy || isCluster ? (
+      {isField ? (
         <Surface look={look} id={id} />
       ) : (
         <g>
@@ -507,177 +496,204 @@ function WorldArt({ look, id }: { look: WorldLook; id: string }) {
           />
         </g>
       )}
-
-      {ring ? (
-        <g transform="rotate(-19)" aria-hidden="true">
-          <path
-            d={`M ${-r * 1.78} 0 A ${r * 1.78} ${r * 0.46} 0 0 0 ${r * 1.78} 0`}
-            fill="none"
-            stroke={ringColor ?? light}
-            strokeWidth={r * 0.15}
-            opacity="0.72"
-            strokeLinecap="round"
-          />
-        </g>
-      ) : null}
-
-      {look.moons?.map((moon, i) => {
-        const a = (moon.angle * Math.PI) / 180
-        return (
-          <g key={i} aria-hidden="true">
-            <ellipse
-              cx={0}
-              cy={0}
-              rx={moon.dist}
-              ry={moon.dist * 0.52}
-              fill="none"
-              stroke={light}
-              strokeWidth="0.8"
-              strokeDasharray="1 4"
-              opacity="0.22"
-              transform={`rotate(${moon.angle - 90})`}
-            />
-            <circle
-              cx={Math.cos(a) * moon.dist}
-              cy={Math.sin(a) * moon.dist * 0.52}
-              r={moon.r}
-              fill={moon.color}
-              stroke="#0A1020"
-              strokeWidth="0.9"
-            />
-          </g>
-        )
-      })}
     </g>
   )
 }
 
-function Sticker({ status, r }: { status: NodeStatus; r: number }) {
-  if (status === 'mastered') {
-    return (
-      <g className="world-sticker" transform={`translate(${r * 0.72} ${-r * 0.78}) rotate(9)`} aria-hidden="true">
-        <circle r="9" fill="#FFD166" stroke="#1B2437" strokeWidth="1.8" />
-        <path
-          d="M0 -4.6 L1.5 -1.3 L5 -1.1 L2.3 1.2 L3.2 4.6 L0 2.7 L-3.2 4.6 L-2.3 1.2 L-5 -1.1 L-1.5 -1.3 Z"
-          fill="#1B2437"
-        />
-      </g>
-    )
-  }
-  if (status === 'charted') {
-    return (
-      <g className="world-sticker" transform={`translate(${r * 0.72} ${-r * 0.78}) rotate(7)`} aria-hidden="true">
-        <circle r="8.5" fill="#63E6C3" stroke="#1B2437" strokeWidth="1.7" />
-        <path
-          d="M-3.4 0.2 L-1 2.6 L3.6 -2.4"
-          fill="none"
-          stroke="#123028"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-    )
-  }
-  return null
-}
+/* --------------------------------------------------------------------------
+   The window: one world, seen up close
+   -------------------------------------------------------------------------- */
 
-function WorldMark({
+function BigWorld({
   question,
   status,
-  isActive,
-  selected,
-  onSelect,
+  r,
+  x,
+  y,
+  className = '',
+  alert = false,
 }: {
   question: Question
   status: NodeStatus
-  isActive: boolean
-  selected: boolean
-  onSelect: (id: string) => void
+  r: number
+  x: number
+  y: number
+  className?: string
+  alert?: boolean
 }) {
   const look = lookOf(question.id)
-  const r = look.r
-  const side = look.labelSide ?? 'below'
-  const labelX = side === 'right' ? r + 10 : side === 'left' ? -(r + 10) : 0
-  const labelY =
-    side === 'above' ? -(r + 16) : side === 'right' || side === 'left' ? 6 : r + 24
-  const anchor = side === 'right' ? 'start' : side === 'left' ? 'end' : 'middle'
-  const tagY = side === 'above' ? labelY - 14 : labelY + 16
-  const showTag = isActive || selected
+  const id = `${question.id}-v`
+  const { base, deep, light, kind, ring, ringColor } = look
+  const isField = kind === 'galaxy' || kind === 'cluster' || kind === 'deepfield'
+  const scaled: WorldLook = { ...look, r }
+  const moons = look.moons?.map((moon) => ({
+    angle: moon.angle,
+    dist: moon.dist * (r / look.r) * 1.32,
+    r: Math.max(3, moon.r * (r / look.r) * 1.15),
+    color: moon.color,
+  }))
 
   return (
-    <g
-      className={`world world--${status} ${isActive ? 'is-active' : ''} ${
-        selected ? 'is-selected' : ''
-      }`}
-      transform={`translate(${question.map.x} ${question.map.y})`}
-      role="button"
-      tabIndex={0}
-      aria-label={`${question.destination}, ${question.tag}, ${getTopic(question.topicId).name}. ${STATUS_LABEL[status]}${
-        isActive ? ', current world' : ''
-      }.`}
-      aria-pressed={selected}
-      onClick={() => onSelect(question.id)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          onSelect(question.id)
-        }
-      }}
-    >
-      <circle className="world-hit" r={Math.max(48, r + 26)} />
-      <circle className="world-focus" r={r + 14} />
+    <g transform={`translate(${x} ${y})`}>
+      <g className={`big-world ${className}`.trim()}>
+      <defs>
+        <radialGradient id={`wgrad-${id}`} cx="32%" cy="26%" r="84%">
+          <stop offset="0%" stopColor={light} />
+          <stop offset="40%" stopColor={base} />
+          <stop offset="100%" stopColor={deep} />
+        </radialGradient>
+        <radialGradient id={`vshade-${id}`} cx="30%" cy="24%" r="92%">
+          <stop offset="48%" stopColor="#04070f" stopOpacity="0" />
+          <stop offset="82%" stopColor="#04070f" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#04070f" stopOpacity="0.85" />
+        </radialGradient>
+        <radialGradient id={`vglow-${id}`}>
+          <stop offset="55%" stopColor={base} stopOpacity="0.32" />
+          <stop offset="100%" stopColor={base} stopOpacity="0" />
+        </radialGradient>
+        <clipPath id={`wclip-${id}`}>
+          <circle r={r} />
+        </clipPath>
+        <clipPath id={`vringf-${id}`}>
+          <rect x={-r * 3} y={0} width={r * 6} height={r * 3} />
+        </clipPath>
+      </defs>
 
-      {isActive ? (
-        <g className="world-orbit" aria-hidden="true">
+      <circle r={r * 1.5} fill={`url(#vglow-${id})`} aria-hidden="true" />
+
+      {ring && !isField ? (
+        <g className="big-ring" transform="rotate(-18)" aria-hidden="true">
           <ellipse
-            rx={r + 22}
-            ry={r * 0.52}
-            transform="rotate(-16)"
+            rx={r * 1.9}
+            ry={r * 0.46}
             fill="none"
-            stroke="#FFD166"
-            strokeWidth="1.8"
-            strokeDasharray="3 6"
+            stroke={ringColor ?? light}
+            strokeWidth={r * 0.13}
+            opacity="0.26"
           />
         </g>
       ) : null}
 
-      {status === 'anomaly' ? (
-        <g className="world-signal" aria-hidden="true">
-          <circle r={r + 9} fill="none" stroke="#FF8D7A" strokeWidth="1.7" strokeDasharray="2.5 4" />
-          <circle r={r + 16} fill="none" stroke="#FF8D7A" strokeWidth="1" opacity="0.5" />
+      {isField ? (
+        <Surface look={scaled} id={id} />
+      ) : (
+        <g>
+          <circle r={r} fill={`url(#wgrad-${id})`} />
+          {kind === 'rocky' ? (
+            <RockySurface look={scaled} id={id} />
+          ) : (
+            <Surface look={scaled} id={id} />
+          )}
+          <circle r={r} fill={`url(#vshade-${id})`} aria-hidden="true" />
+          <circle
+            r={r}
+            fill="none"
+            stroke={light}
+            strokeOpacity="0.24"
+            strokeWidth="1.4"
+            aria-hidden="true"
+          />
+          <path
+            d={`M ${-r * 0.74} ${-r * 0.48} A ${r * 0.92} ${r * 0.92} 0 0 1 ${-r * 0.3} ${-r * 0.82}`}
+            fill="none"
+            stroke={light}
+            strokeWidth={Math.max(2, r * 0.022)}
+            strokeLinecap="round"
+            opacity="0.5"
+            aria-hidden="true"
+          />
+        </g>
+      )}
+
+      {ring && !isField ? (
+        <g
+          className="big-ring"
+          transform="rotate(-18)"
+          clipPath={`url(#vringf-${id})`}
+          aria-hidden="true"
+        >
+          <ellipse
+            rx={r * 1.9}
+            ry={r * 0.46}
+            fill="none"
+            stroke={ringColor ?? light}
+            strokeWidth={r * 0.13}
+            opacity="0.9"
+          />
+          <ellipse
+            rx={r * 1.9}
+            ry={r * 0.46}
+            fill="none"
+            stroke={light}
+            strokeWidth={r * 0.035}
+            opacity="0.45"
+          />
         </g>
       ) : null}
 
-      {status === 'uncharted' ? (
-        <circle
-          className="world-halo"
-          r={r + 8}
-          fill="none"
-          stroke="#8C99B2"
-          strokeWidth="1.1"
-          strokeDasharray="2 5"
-          opacity="0.55"
-          aria-hidden="true"
-        />
+      {!isField && moons ? (
+        <g className="big-moons">
+          {moons.map((moon, i) => {
+          const a = (moon.angle * Math.PI) / 180
+          return (
+            <g key={i} aria-hidden="true">
+              <ellipse
+                rx={moon.dist}
+                ry={moon.dist * 0.5}
+                fill="none"
+                stroke={light}
+                strokeWidth="1"
+                strokeDasharray="2 7"
+                opacity="0.18"
+                transform={`rotate(${moon.angle - 90})`}
+              />
+              <circle
+                cx={Math.cos(a) * moon.dist}
+                cy={Math.sin(a) * moon.dist * 0.5}
+                r={moon.r}
+                fill={moon.color}
+                stroke="#0A1020"
+                strokeWidth="1.4"
+              />
+            </g>
+          )
+          })}
+        </g>
       ) : null}
 
-      <WorldArt look={look} id={question.id} />
-      <Sticker status={status} r={r} />
-
-      <text
-        x={labelX}
-        y={labelY}
-        textAnchor={anchor}
-        className={`world-label ${isActive ? 'is-active' : ''}`}
-      >
-        {question.destination}
-      </text>
-      {showTag ? (
-        <text x={labelX} y={tagY} textAnchor={anchor} className="world-tagline">
-          {isActive ? 'you are here' : question.tag.toLowerCase()}
-        </text>
+      {status === 'anomaly' || alert ? (
+        <g className="big-signal" aria-hidden="true">
+          <circle
+            r={r + 20}
+            fill="none"
+            stroke="#FF8D7A"
+            strokeWidth="2.2"
+            strokeDasharray="4 9"
+            opacity="0.9"
+          />
+          <circle r={r + 32} fill="none" stroke="#FF8D7A" strokeWidth="1" opacity="0.35" />
+        </g>
       ) : null}
+      </g>
+    </g>
+  )
+}
+
+function StationArt({ x, y, scale = 1, glow = false }: { x: number; y: number; scale?: number; glow?: boolean }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`} aria-hidden="true">
+      {glow ? <circle r="96" fill="url(#dock-glow)" /> : null}
+      <ellipse cx="0" cy="10" rx="58" ry="16" fill="rgba(3,7,15,0.5)" />
+      <g transform="rotate(-24)">
+        <rect x="-40" y="-9" width="24" height="18" rx="3" fill="#2F4C74" stroke="#0B1220" strokeWidth="1.4" />
+        <path d="M-38 -6H-18M-38 0H-18M-38 6H-18" stroke="#7FA7CE" strokeWidth="1" opacity="0.7" />
+        <rect x="16" y="-9" width="24" height="18" rx="3" fill="#2F4C74" stroke="#0B1220" strokeWidth="1.4" />
+        <path d="M18 -6H38M18 0H38M18 6H38" stroke="#7FA7CE" strokeWidth="1" opacity="0.7" />
+        <rect x="-13" y="-11" width="26" height="22" rx="6" fill="#F7EED9" stroke="#0B1220" strokeWidth="2" />
+        <circle r="5.4" fill="#FFD166" stroke="#0B1220" strokeWidth="1.4" />
+        <path d="M-13 -17V-11M13 -17V-11" stroke="#0B1220" strokeWidth="2" strokeLinecap="round" />
+      </g>
+      <circle r="44" fill="none" stroke="#F7EED9" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="2 6" />
     </g>
   )
 }
@@ -706,27 +722,135 @@ function Ship({ color }: { color: string }) {
   )
 }
 
-function Station() {
+/* --------------------------------------------------------------------------
+   A deterministic sky
+   -------------------------------------------------------------------------- */
+
+function makeStars() {
+  let seed = 20261117
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296
+    return seed / 4294967296
+  }
+  return Array.from({ length: 170 }, () => {
+    const bright = rand()
+    return {
+      x: Number((rand() * 900).toFixed(1)),
+      y: Number((rand() * 620).toFixed(1)),
+      r: bright > 0.94 ? 2.1 : bright > 0.72 ? 1.15 : 0.6,
+      o: Number((0.16 + bright * 0.55).toFixed(2)),
+      flare: bright > 0.94,
+    }
+  })
+}
+
+const STARS = makeStars()
+
+function Sky() {
   return (
-    <g className="station" transform={`translate(${STATION.x} ${STATION.y})`} aria-hidden="true">
-      <ellipse cx="0" cy="8" rx="56" ry="17" fill="rgba(10,15,28,0.55)" />
-      <g transform="rotate(-28)">
-        <rect x="-40" y="-9" width="24" height="18" rx="3" fill="#2F4C74" stroke="#0B1220" strokeWidth="1.4" />
-        <path d="M-38 -6H-18M-38 0H-18M-38 6H-18" stroke="#7FA7CE" strokeWidth="1" opacity="0.7" />
-        <rect x="16" y="-9" width="24" height="18" rx="3" fill="#2F4C74" stroke="#0B1220" strokeWidth="1.4" />
-        <path d="M18 -6H38M18 0H38M18 6H38" stroke="#7FA7CE" strokeWidth="1" opacity="0.7" />
-        <rect x="-13" y="-11" width="26" height="22" rx="6" fill="#F7EED9" stroke="#0B1220" strokeWidth="2" />
-        <circle r="5.4" fill="#FFD166" stroke="#0B1220" strokeWidth="1.4" />
-        <path d="M-13 -17V-11M13 -17V-11" stroke="#0B1220" strokeWidth="2" strokeLinecap="round" />
-      </g>
-      <circle r="44" fill="none" stroke="#F7EED9" strokeOpacity="0.18" strokeWidth="1" strokeDasharray="2 6" />
-      <text y="-58" textAnchor="middle" className="station-label">
-        Meridian Station
-      </text>
-      <text y="64" textAnchor="middle" className="station-sub">
-        home dock
-      </text>
+    <g aria-hidden="true">
+      <defs>
+        <radialGradient id="sky-neb-a">
+          <stop offset="0%" stopColor="#6F86D6" stopOpacity="0.26" />
+          <stop offset="100%" stopColor="#6F86D6" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="sky-neb-b">
+          <stop offset="0%" stopColor="#C77BA8" stopOpacity="0.17" />
+          <stop offset="100%" stopColor="#C77BA8" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="sky-neb-c">
+          <stop offset="0%" stopColor="#63E6C3" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#63E6C3" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="dock-glow">
+          <stop offset="0%" stopColor="#FFD166" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#FFD166" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <ellipse cx="130" cy="90" rx="330" ry="230" fill="url(#sky-neb-a)" />
+      <ellipse cx="790" cy="470" rx="300" ry="220" fill="url(#sky-neb-b)" />
+      <ellipse cx="700" cy="70" rx="230" ry="160" fill="url(#sky-neb-c)" />
+
+      {STARS.map((star, i) =>
+        star.flare ? (
+          <g key={i} opacity={star.o}>
+            <circle cx={star.x} cy={star.y} r={star.r} fill="#F6F1E6" />
+            <path
+              d={`M ${star.x - 7} ${star.y} H ${star.x + 7} M ${star.x} ${star.y - 7} V ${star.y + 7}`}
+              stroke="#F6F1E6"
+              strokeWidth="0.7"
+              opacity="0.55"
+            />
+          </g>
+        ) : (
+          <circle key={i} cx={star.x} cy={star.y} r={star.r} fill="#E8E4DA" opacity={star.o} />
+        ),
+      )}
     </g>
+  )
+}
+
+/* --------------------------------------------------------------------------
+   The chart table
+   -------------------------------------------------------------------------- */
+
+const CANON = new Map(EXPEDITION.itinerary.map((id, index) => [id, index]))
+
+function regionWorlds(topic: TopicId): Question[] {
+  return topicQuestions(topic)
+    .slice()
+    .sort((a, b) => (CANON.get(a.id) ?? 99) - (CANON.get(b.id) ?? 99))
+}
+
+function ChartWorld({
+  question,
+  status,
+  active,
+  selected,
+  onSelect,
+}: {
+  question: Question
+  status: NodeStatus
+  active: boolean
+  selected: boolean
+  onSelect: (id: string) => void
+}) {
+  const look = { ...lookOf(question.id), r: 13 }
+
+  return (
+    <button
+      type="button"
+      className={`cw cw--${status} ${active ? 'is-active' : ''} ${selected ? 'is-selected' : ''}`}
+      aria-pressed={selected}
+      aria-label={`${question.destination}, ${getTopic(question.topicId).name}, ${
+        STATUS_LABEL[status]
+      }${active ? ', current world' : ''}`}
+      onClick={() => onSelect(question.id)}
+    >
+      <span className="cw-art">
+        <svg viewBox="-32 -32 64 64" aria-hidden="true">
+          <WorldArt look={look} id={`${question.id}-mini`} />
+        </svg>
+        {status === 'mastered' ? (
+          <span className="cw-mark is-mastered">
+            <StarIcon />
+          </span>
+        ) : status === 'charted' ? (
+          <span className="cw-mark is-charted">
+            <CheckIcon />
+          </span>
+        ) : status === 'anomaly' ? (
+          <span className="cw-mark is-anomaly">
+            <AnomalyIcon />
+          </span>
+        ) : null}
+      </span>
+      <span className="cw-text">
+        <span className="cw-name">{question.destination}</span>
+        <span className="cw-tag">{active ? 'you are here' : question.tag.toLowerCase()}</span>
+      </span>
+    </button>
   )
 }
 
@@ -739,19 +863,39 @@ export function StarMap({
   onTrackAnomaly,
 }: StarMapProps) {
   const [selected, setSelected] = useState<string | null>(null)
+  const [prevId, setPrevId] = useState<string | null>(null)
+  const lastActive = useRef(activeQuestionId(state))
+
   const progress = expeditionProgress(state)
   const activeId = activeQuestionId(state)
   const active = getQuestion(activeId)
   const activeTopic = getTopic(active.topicId)
   const atStation = state.phase === 'preflight'
+  const atDebrief = state.phase === 'debrief'
+  const junction = state.phase === 'junction' ? state.junction : null
+  const preview = getQuestion(state.itinerary[0] ?? activeId)
+  const dueIds = state.phase === 'underway' ? dueAnomalyIds(state) : []
+
   const selectedQuestion = selected ? getQuestion(selected) : null
   const selectedStatus = selected ? statusOf(state, selected) : null
   const selectedRecord = selected ? state.answers[selected] : undefined
   const selectedAnomaly = selected ? state.anomalies[selected] : undefined
   const selectedDue = selected ? isDue(state, selected) : false
 
-  const shipRest: Point = atStation ? STATION : flight ? flight.to : active.map
-  const shipLift = atStation ? 34 : lookOf(active.id).r + 26
+  /* Remember the last world so it can fly past on the way to the next one. */
+  useEffect(() => {
+    if (lastActive.current === activeId) return
+    const previous = lastActive.current
+    lastActive.current = activeId
+    setSelected(null)
+    if (!motion) {
+      setPrevId(null)
+      return
+    }
+    setPrevId(previous)
+    const timer = window.setTimeout(() => setPrevId(null), 720)
+    return () => window.clearTimeout(timer)
+  }, [activeId, motion])
 
   useEffect(() => {
     if (!selected) return
@@ -762,254 +906,275 @@ export function StarMap({
     return () => window.removeEventListener('keydown', onKey)
   }, [selected])
 
-  return (
-    <section className="atlas" aria-labelledby="chart-heading">
-      <div className="atlas-sky" aria-hidden="true" />
+  const travel = Boolean(flight) && motion && !atStation && !atDebrief && !junction
 
-      <header className="atlas-head">
-        <div>
-          <p className="atlas-kicker">
-            <CompassDoodle aria-hidden="true" /> Chart no. 001
-          </p>
-          <h2 className="atlas-title" id="chart-heading">
-            The Near Universe
-          </h2>
-          <p className="atlas-sub">Twelve worlds, four constellations, one little ship.</p>
+  const plate = atStation
+    ? {
+        kicker: 'EXPEDITION 001 · HOME DOCK',
+        name: 'Meridian Station',
+        sub: `Docked. First stop — ${preview.destination}.`,
+      }
+    : atDebrief
+      ? {
+          kicker: 'EXPEDITION COMPLETE',
+          name: 'Meridian Station',
+          sub: `${progress.known} of ${progress.total} worlds on the chart. The log is written.`,
+        }
+      : junction
+        ? {
+            kicker: 'ROUTE JUNCTION · PICK A LANE',
+            name: 'Two ways through',
+            sub: 'The Quiet Belt is calm. The Ion Storm is louder and worth more fuel.',
+          }
+        : {
+            kicker: state.detour
+              ? 'SIGNAL DETOUR'
+              : `${activeTopic.name} · ${activeTopic.discipline}`,
+            name: active.destination,
+            sub:
+              state.detour || state.phase === 'underway'
+                ? state.detour
+                  ? `${active.tag} · out of sequence, then back on the route`
+                  : `${active.tag} · world ${Math.min(state.cursor + 1, state.itinerary.length)} of ${state.itinerary.length}`
+                : active.tag,
+          }
+
+  return (
+    <section className="deck" aria-labelledby="chart-heading">
+      <header className="deck-head">
+        <div className="deck-id">
+          <CompassDoodle aria-hidden="true" />
+          <div>
+            <p className="deck-kicker">Observation deck · sheet 01</p>
+            <h2 className="deck-title" id="chart-heading">
+              The Near Universe
+            </h2>
+          </div>
         </div>
-        <p className="atlas-tally">
+        <p className="deck-tally">
           <span>
-            <b>{progress.mastered + progress.charted}</b> charted
+            <b>{progress.known}</b> charted
           </span>
-          <span className="atlas-tally-dot" aria-hidden="true">
+          <span className="deck-tally-dot" aria-hidden="true">
             ·
           </span>
           <span>
-            <b>{progress.anomalies}</b> signals
+            <b>{progress.anomalies}</b> signal{progress.anomalies === 1 ? '' : 's'}
           </span>
         </p>
       </header>
 
-      <svg
-        className="atlas-svg"
-        viewBox="0 0 1000 1000"
-        role="img"
-        aria-labelledby="chart-title chart-desc"
-      >
-        <title id="chart-title">Illustrated atlas of the Near Universe</title>
-        <desc id="chart-desc">
-          {progress.mastered} worlds mastered, {progress.charted} recovered from a signal,{' '}
-          {progress.anomalies} signals still unresolved. The ship is at{' '}
-          {atStation ? 'Meridian Station' : active.destination}.
-        </desc>
+      <div className={`viewport ${motion ? '' : 'is-still'}`}>
+        <svg
+          className="viewport-svg"
+          viewBox="0 0 900 620"
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
+        >
+          <Sky />
 
-        <StarField />
-
-        {/* Broad pencil orbits, drawn behind the worlds. */}
-        <g className="atlas-orbits" aria-hidden="true">
-          <path
-            d="M 70 470 C 240 300 700 250 930 430"
-            fill="none"
-            stroke="rgba(243,236,220,0.09)"
-            strokeWidth="1.4"
-            strokeDasharray="2 11"
-          />
-          <path
-            d="M 90 590 C 300 760 690 800 920 600"
-            fill="none"
-            stroke="rgba(243,236,220,0.08)"
-            strokeWidth="1.4"
-            strokeDasharray="2 11"
-          />
-          <path
-            d="M 470 70 C 330 330 320 660 500 930"
-            fill="none"
-            stroke="rgba(255,209,102,0.07)"
-            strokeWidth="1.2"
-            strokeDasharray="1 13"
-          />
-        </g>
-
-        {/* A comet wandering through the empty quarter. */}
-        <g className="atlas-comet" transform="translate(628 292) rotate(16)" aria-hidden="true">
-          <path
-            d="M 7 -3 L 62 -16 M 7 1 L 50 11 M 5 -6 L 42 -30"
-            stroke="rgba(243,236,220,0.3)"
-            strokeWidth="1.3"
-            strokeLinecap="round"
-          />
-          <circle r="4.6" fill="#F3ECDC" opacity="0.85" />
-          <circle r="9" fill="none" stroke="rgba(243,236,220,0.25)" strokeWidth="1" />
-        </g>
-
-        {/* Each constellation is a faint triangle that inks itself in as you learn. */}
-        {Object.values(TOPICS).map((topic, index) => {
-          const qs = topicQuestions(topic.id)
-          const known = qs.filter((question) => {
-            const status = statusOf(state, question.id)
-            return status === 'mastered' || status === 'charted'
-          })
-          const pairs: Array<[Question, Question]> = [
-            [qs[0], qs[1]],
-            [qs[1], qs[2]],
-            [qs[2], qs[0]],
-          ]
-          return (
-            <g key={topic.id}>
-              {pairs.map(([a, b], i) => (
-                <path
-                  key={`pencil-${i}`}
-                  d={sketchLine(a.map, b.map, index + i, 5)}
-                  fill="none"
-                  stroke="rgba(243,236,220,0.12)"
-                  strokeWidth="1.2"
-                  strokeDasharray="2 8"
-                  aria-hidden="true"
-                />
-              ))}
-              {pairs.map(([a, b], i) => {
-                if (!known.includes(a) || !known.includes(b)) return null
-                return (
+          {atStation || atDebrief ? (
+            <>
+              <StationArt x={450} y={atDebrief ? 300 : 330} scale={atDebrief ? 2.3 : 1.9} glow />
+              {atStation ? (
+                <>
+                  <BigWorld question={preview} status="uncharted" r={74} x={690} y={250} />
                   <path
-                    key={`ink-${i}`}
-                    d={sketchLine(a.map, b.map, index + i + 4, 4)}
+                    d="M 300 392 Q 470 476 646 306"
                     fill="none"
-                    stroke={topic.hue}
-                    strokeOpacity="0.5"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    aria-hidden="true"
+                    stroke="#FFD166"
+                    strokeWidth="1.6"
+                    strokeDasharray="3 9"
+                    opacity="0.45"
                   />
-                )
-              })}
-            </g>
-          )
-        })}
-
-        {Object.values(TOPICS).map((topic) => {
-          const qs = topicQuestions(topic.id)
-          const known = qs.filter((question) => {
-            const status = statusOf(state, question.id)
-            return status === 'mastered' || status === 'charted'
-          }).length
-          const at = REGION_LABEL[topic.id]
-          return (
-            <g key={topic.id} className="constellation" aria-hidden="true">
-              <text x={at.x} y={at.y} textAnchor="middle" className="constellation-name" fill={topic.hue}>
-                {topic.name}
-              </text>
+                  <g transform="translate(452 404) scale(1.05)">
+                    <Ship color="#FFD166" />
+                  </g>
+                </>
+              ) : (
+                <g transform="translate(548 372) rotate(52) scale(1.15)">
+                  <Ship color="#63E6C3" />
+                </g>
+              )}
+            </>
+          ) : junction ? (
+            <>
               <path
-                d={`M ${at.x - 52} ${at.y + 9} q 26 7 54 1 t 50 -3`}
+                d="M 450 640 Q 380 470 268 398"
                 fill="none"
-                stroke={topic.hue}
-                strokeWidth="1.6"
-                strokeLinecap="round"
+                stroke="#63E6C3"
+                strokeWidth="1.8"
+                strokeDasharray="4 9"
                 opacity="0.55"
               />
-              <text x={at.x} y={at.y + 22} textAnchor="middle" className="constellation-note">
-                {topic.discipline.toLowerCase()} · {known}/{qs.length} charted
+              <path
+                d="M 450 640 Q 540 460 646 386"
+                fill="none"
+                stroke="#FF8D7A"
+                strokeWidth="1.8"
+                strokeDasharray="4 9"
+                opacity="0.55"
+              />
+              <BigWorld
+                question={getQuestion(junction.safeId)}
+                status={statusOf(state, junction.safeId)}
+                r={82}
+                x={252}
+                y={294}
+              />
+              <BigWorld
+                question={getQuestion(junction.riskyId)}
+                status={statusOf(state, junction.riskyId)}
+                r={100}
+                x={652}
+                y={274}
+              />
+              <text x={252} y={430} textAnchor="middle" className="junc-name">
+                {getQuestion(junction.safeId).destination}
               </text>
-            </g>
-          )
-        })}
+              <text x={252} y={454} textAnchor="middle" className="junc-sub">
+                {ROUTES.safe.name} · calmer
+              </text>
+              <text x={652} y={418} textAnchor="middle" className="junc-name">
+                {getQuestion(junction.riskyId).destination}
+              </text>
+              <text x={652} y={442} textAnchor="middle" className="junc-sub">
+                {ROUTES.risky.name} · harder
+              </text>
+            </>
+          ) : (
+            <>
+              {prevId && prevId !== activeId && travel ? (
+                <BigWorld
+                  key={`leaving-${prevId}`}
+                  question={getQuestion(prevId)}
+                  status={statusOf(state, prevId)}
+                  r={186}
+                  x={470}
+                  y={300}
+                  className="is-leaving"
+                />
+              ) : null}
 
-        <Station />
-
-        <g className="worlds">
-          {[...QUESTIONS]
-            .sort(
-              (a, b) =>
-                Number(a.id === activeId) - Number(b.id === activeId) ||
-                Number(statusOf(state, a.id) === 'uncharted') -
-                  Number(statusOf(state, b.id) === 'uncharted'),
-            )
-            .map((question) => (
-              <WorldMark
-                key={question.id}
-                question={question}
-                status={statusOf(state, question.id)}
-                isActive={question.id === activeId && state.phase === 'underway'}
-                selected={selected === question.id}
-                onSelect={setSelected}
+              <BigWorld
+                key={activeId}
+                question={active}
+                status={statusOf(state, activeId)}
+                r={Math.round(158 + lookOf(activeId).r * 1.15)}
+                x={470}
+                y={298}
               />
-            ))}
-        </g>
 
-        {landingKey > 0 && motion ? (
-          <g
-            key={landingKey}
-            className="landing-bloom"
-            transform={`translate(${shipRest.x} ${shipRest.y})`}
-            aria-hidden="true"
+              {landing && motion ? (
+                <g key={`land-${landingKey}`} className="land-burst" transform="translate(470 298)">
+                  <circle r="120" className="land-ring" stroke="#FFD166" />
+                  <circle r="120" className="land-ring land-ring--late" stroke={activeTopic.hue} />
+                </g>
+              ) : null}
+
+              {travel ? (
+                <g key={`warp-${flight?.key}`} className="warp" aria-hidden="true">
+                  {[86, 148, 214, 276, 338, 402, 468, 532].map((y, i) => (
+                    <line
+                      key={y}
+                      x1={-160}
+                      x2={1060}
+                      y1={y}
+                      y2={y}
+                      style={{ animationDelay: `${i * 34}ms` }}
+                    />
+                  ))}
+                </g>
+              ) : null}
+            </>
+          )}
+        </svg>
+
+        <span className="rivet rivet--tl" aria-hidden="true" />
+        <span className="rivet rivet--tr" aria-hidden="true" />
+        <span className="rivet rivet--bl" aria-hidden="true" />
+        <span className="rivet rivet--br" aria-hidden="true" />
+
+        <div className="viewport-glare" aria-hidden="true" />
+
+        <div className="deck-plate">
+          <p className="plate-kicker">{plate.kicker}</p>
+          <p className="plate-name">{plate.name}</p>
+          <p className="plate-sub">{plate.sub}</p>
+        </div>
+
+        {dueIds.length > 0 ? (
+          <button
+            type="button"
+            className="signal-lamp"
+            onClick={() => onTrackAnomaly(dueIds[0])}
+            aria-label={`Signal due. Track ${getQuestion(dueIds[0]).destination}.`}
           >
-            <circle r="7" className="landing-ring" stroke={activeTopic.hue} />
-            <circle r="7" className="landing-ring landing-ring--late" stroke="#FFD166" />
-            <path
-              className="landing-spark"
-              d="M0 -40V-26M0 26V40M-40 0H-26M26 0H40"
-              stroke={activeTopic.hue}
-            />
-          </g>
+            <span className="signal-lamp-dot" aria-hidden="true" />
+            Signal due
+          </button>
         ) : null}
+      </div>
 
-        {flight && motion ? (
-          <g key={`flight-${flight.key}`} className="flight">
-            <path
-              d={flightArc(flight.from, flight.to).d}
-              pathLength={1}
-              className="flight-trail"
-              fill="none"
-            />
-            <g className="ship ship--moving">
-              <g transform="scale(0.82)">
-                <Ship color={activeTopic.hue} />
-              </g>
-              <animateMotion
-                dur="0.95s"
-                fill="freeze"
-                rotate="auto"
-                path={flightArc(flight.from, flight.to).d}
-                calcMode="spline"
-                keyTimes="0;1"
-                keySplines="0.42 0 0.28 1"
-              />
-            </g>
-          </g>
-        ) : (
-          <g
-            className={`ship ship--resting ${atStation ? 'is-docked' : ''} ${
-              landing ? 'is-landing' : ''
-            }`}
-            transform={`translate(${shipRest.x} ${shipRest.y - shipLift})`}
-            aria-hidden="true"
-          >
-            <ellipse cx="0" cy={shipLift - 6} rx="14" ry="4" fill="rgba(0,0,0,0.32)" />
-            <g transform="scale(0.96)">
-              <Ship color={activeTopic.hue} />
-            </g>
-          </g>
-        )}
-      </svg>
+      <div className="chart-paper">
+        <div className="chart-top">
+          <p className="chart-title">Nav chart</p>
+          <p className="chart-progress">
+            <b>{progress.known}</b>/{progress.total} charted
+            <span aria-hidden="true"> · </span>
+            <b>{progress.mastered}</b> mastered
+          </p>
+        </div>
 
-      <div className="atlas-foot">
-        <ul className="atlas-legend" aria-label="Atlas legend">
-          <li className="atlas-key atlas-key--mastered">
+        <div className="chart-grid">
+          {Object.values(TOPICS).map((topic) => {
+            const worlds = regionWorlds(topic.id)
+            const known = worlds.filter((question) => {
+              const status = statusOf(state, question.id)
+              return status === 'mastered' || status === 'charted'
+            }).length
+            return (
+              <div className="chart-region" key={topic.id}>
+                <p className="chart-region-head">
+                  <span className="chart-region-name">{topic.name}</span>
+                  <span className="chart-region-count">{known}/3</span>
+                </p>
+                {worlds.map((question) => (
+                  <ChartWorld
+                    key={question.id}
+                    question={question}
+                    status={statusOf(state, question.id)}
+                    active={question.id === activeId && state.phase === 'underway'}
+                    selected={selected === question.id}
+                    onSelect={setSelected}
+                  />
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="deck-foot">
+        <ul className="deck-keys" aria-label="Chart legend">
+          <li className="deck-key deck-key--mastered">
             <StarIcon aria-hidden="true" />
             mastered <b>{progress.mastered}</b>
           </li>
-          <li className="atlas-key atlas-key--charted">
+          <li className="deck-key deck-key--charted">
             <CheckIcon aria-hidden="true" />
             charted <b>{progress.charted}</b>
           </li>
-          <li className="atlas-key atlas-key--anomaly">
+          <li className="deck-key deck-key--anomaly">
             <AnomalyIcon aria-hidden="true" />
             signals <b>{progress.anomalies}</b>
           </li>
-          <li className="atlas-key atlas-key--uncharted">
-            <span className="legend-halo" aria-hidden="true" />
+          <li className="deck-key deck-key--uncharted">
+            <span className="key-halo" aria-hidden="true" />
             uncharted <b>{Math.max(0, progress.total - progress.known - progress.anomalies)}</b>
           </li>
         </ul>
-        <p className="atlas-tip">
+        <p className="deck-tip">
           <ScanIcon aria-hidden="true" /> Tap a world to look closer
         </p>
       </div>
@@ -1036,7 +1201,7 @@ export function StarMap({
             ) : selectedStatus === 'anomaly' ? (
               <AnomalyIcon aria-hidden="true" />
             ) : (
-              <span className="node-file-dot" aria-hidden="true" />
+              <span className="status-dot" aria-hidden="true" />
             )}
             {STATUS_LABEL[selectedStatus]}
           </p>

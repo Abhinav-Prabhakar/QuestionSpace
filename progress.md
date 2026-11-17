@@ -3,12 +3,76 @@
 A working log for QuestionSpace — decisions, visual rounds, measurements, and what is
 still open. Newest state first.
 
-**Status:** v2 loop complete, illustrated atlas shipped, a11y and contrast passes complete,
-GitHub Pages deploy configured. `npm run check` and `npm run build` pass.
+**Status:** v2 loop complete, first-person observation window shipped, chart table, a11y and
+contrast passes complete, GitHub Pages deploy configured. `npm run check` and `npm run build`
+pass.
 
 ---
 
-## 17 Nov 2026 — the illustrated atlas
+## 17 Nov 2026 — the observation window
+
+### What changed
+
+The atlas was still a top-down map: a lovely one, but a map. The brief was a game-style left
+panel, first person, travelling between planets. This round replaced the atlas with a
+**window** and demoted the map to a **nav chart taped to the dash**.
+
+**The window**
+
+- A hand-drawn brass frame with four rivets, a scratched-glass glare, and a brass nameplate:
+  region, world name, survey tag, and position in the run.
+- One world at a time, drawn large: the same twelve hand-tuned looks (bands, craters, ice
+  cracks, hazies, metallic sheen, galaxy arms, lensed cluster, deep field) with an added
+  atmosphere glow, a directional terminator, a proper front/back ring split, and orbiting
+  moons scaled to the window.
+- **Travel is staged.** On arrival the new world rises from 58% scale with a slight upward
+  drift. On departure the old world grows past the glass and fades while dashes streak
+  across the pane. Both are short (≈1 s) and happen at question boundaries, so the loop
+  stays instant.
+- **Junctions are a place, not a dialog.** The window shows the calm world on the left and
+  the storm world on the right, named, with two dashed routes bending in from the ship.
+- **Meridian Station** opens and closes the run: a docked establishing shot with the first
+  destination hanging nearby, and a warm return shot at the debrief.
+- A coral **signal lamp** appears in the glass when a signal is due and tracks it in one
+  tap; a coral dashed ring orbits the world while it is being re-surveyed.
+
+**The nav chart**
+
+- A strip of paper with two tape tabs, pinned under the window. Four region columns, three
+  worlds each, with region counts. Every world is a real button with its planet glyph,
+  name, and survey tag.
+- State still reads without colour: muted glyph + dashed halo (uncharted), mint check
+  (charted), amber star (mastered), coral dotted ring + badge (signal), amber dashes plus
+  `you are here` (current).
+- The world card is unchanged in spirit and now sits over the chart, like a note laid on
+  the table.
+
+**Implementation notes**
+
+- `StarMap.tsx` is now one window scene plus a chart; the old 1000×1000 atlas SVG,
+  constellation lines, ship flight arcs, and `lib/geometry.ts` are gone.
+- `Flight` is now just a departure key. `App.tsx` no longer computes map arcs.
+- Arrival/departure use CSS transforms on a wrapper group so the SVG `translate` stays
+  intact; chart glyphs reuse the same `WorldArt` renderer at `r = 13`.
+- Mobile switches the chart to a 2×2 region grid so names stop truncating, and keeps the
+  window above it.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `npm run check` | Typecheck + 25 tests + 36 contrast pairs pass |
+| `npm run build` | Succeeds |
+| Window at 1440×900 | Planet fills the pane; plate and lamp legible |
+| Window at 393×852 | planet crops deliberately; chart names readable in 2×2 |
+| Arrival / departure | warp dashes + scale/FX, suppressed by reduced motion |
+| Junction | VESTA / PSYCHE shown with lane labels and route arcs |
+| Detour | lamp → anomaly ring on KEPLER-16 b → plate says “signal detour” |
+| Debrief | station return shot; chart fully inked or ringed |
+
+---
+
+## Previous round — the illustrated atlas (superseded)
 
 ### What changed
 
@@ -138,16 +202,17 @@ and screenshot regression.
 
 ## Open questions
 
-- Is one comet enough, or does the empty centre want a second decorative element (a
-  compass rose, a hand-written “the long dark” note)?
-- The atlas is a fixed 1000×1000 scene. On ultra-wide screens it letterboxes slightly; a
-  wider viewBox could use the space.
-- The world card can cover the bottom-right constellation. On mobile it is a bottom sheet;
-  on desktop it might be better anchored to the selected planet.
-- Signal rings pulse continuously. It is slow (3.4 s) and suppressed by reduced motion, but
-  could be made a single arrival pulse like the old chart.
-- Should unanswered worlds show their topic tag on hover? Currently only the active or
-  selected world shows one.
+- The window is a single static planet. A slow terminator drift, a creeping cloud band, or a
+  tiny moon orbit would make it feel alive; all are currently suppressed to keep renders
+  deterministic and calm.
+- The junction shows both worlds, but the lane colours (mint/coral) only appear as thin route
+  lines. The console carries the real choice; the window is atmosphere.
+- The nav chart is four fixed columns. At 12 worlds it works; at 40 it would need scrolling,
+  folding, or a second sheet.
+- The world card covers half the chart on mobile. A bottom sheet or an inline expansion
+  under the tapped world would keep the map visible.
+- Warp dashes are randomised by index, not by direction of travel. A real directional streak
+  field would sell the turn better.
 
 ---
 
@@ -161,4 +226,5 @@ and screenshot regression.
 4. **Cross-session spaced return** — keep signals due across sessions and show “last seen”
    age on the world card.
 5. **Second sheet** — expedition selector using the existing `Expedition` shape.
-6. **Perf pass on the atlas** if world count grows; today it is 12 inline SVGs and cheap.
+6. **Perf pass** as world count grows; today it is one large inline SVG and twelve small
+   chart glyphs.
