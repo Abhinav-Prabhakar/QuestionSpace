@@ -15,11 +15,12 @@ come back for another look.
 Most quiz apps turn learning into a progress bar. QuestionSpace turns it into a place — and
 puts you inside it.
 
-The left panel is the ship's observation window. You look out from the co-pilot's seat:
-a hand-drawn brass frame, rivets, a scratched pane of glass, stars and nebulae beyond. The
-world ahead fills the window, rings and moons and all. When you fly on, the old world slides
-past, the stars streak, and the next planet swells into view. There is no third-person map
-to look down at.
+The left panel is the ship's canopy. You sit in the pilot's seat: a hand-drawn brass frame
+with rivets and pillar grips, a leather glare shield across the bottom of the glass, an
+instrument strip along the bow, and a scratched pane with three depths of stars and drifting
+nebulae beyond it. The world ahead fills the view, rings, moons, cloud bands and all. When
+you fly on, the old world slides past, the stars streak outward from the centre, and the
+next planet swells into view. There is no third-person map to look down at.
 
 Knowledge lives on the **nav chart** taped to the dash below the window. Twelve worlds in
 four regions, dim when unknown, inked when charted, starred when mastered, ringed in coral
@@ -39,20 +40,39 @@ stays on the chart as a **signal**, and you can fly back to it later.
 
 ---
 
-## The observation deck
+## The cockpit
 
-- **A first-person window.** One world at a time, seen large: a ringed gas giant, an ocean
-  world, red and grey rock worlds, a metallic asteroid, two ice moons, a hazy orange moon,
-  a spiral galaxy, a lensed cluster, and a deep field. Every surface is inline SVG with
-  hand-drawn bands, craters, ice cracks, galaxy arms, rings, and moons.
-- **Arrival and departure.** A planet rises into the window as you arrive; the last world
-  slides past as you leave, with a short field of warp streaks between. At a route junction
-  the window shows both lanes — the calm world on the left, the storm world on the right,
-  their routes bending away from the ship.
-- **A brass nameplate** in the corner of the pane: region, world name, what the survey is,
-  and where you are in the run. Meridian Station gets its own plate, docked and undocked.
+- **A real canopy, not a picture frame.** The brass frame lives in its own stretch-to-fit
+  SVG layer, so the pillars, canopy bow, cowl and glass edge hug the pane at any aspect —
+  1440×900, 1024×820, or a phone. The scene inside keeps its own slice fit, so planets stay
+  round. Both layers are hand-drawn vectors: brass gradient, brushed grain, 13 rivets per
+  side, a raised bow with a latch, leather cowl with stitching, vents and a switch bank.
+- **You can see the ship you are sitting in.** Pillar grips, glass scratches and dust caught
+  in the pane, a raking ceiling gloss, and a glare pass over the whole window.
+- **Depth in the sky.** Three parallax star layers at different sizes and opacities, a
+  galactic band, three nebulae, and a satellite that crosses the pane every 38 seconds.
+  The whole scene drifts a few pixels on a 21-second idle cycle so the view never looks
+  frozen.
+- **Instruments over the glass.** A heading tape (`HDG 043°`) at the top, corner target
+  brackets and a reticle around the world, and a telemetry block (`RNG`, `SIG`, hull) at
+  lower right. The HUD is HTML, not SVG, so it stays crisp at any size.
+- **Scanning looks like scanning.** Spending a fuel cell to scan starts a rotating sweep
+  inside the target brackets and lights a `Deep scan · eliminating` chip.
+- **Answers land somewhere.** A correct answer stamps `SURVEY VERIFIED` on the glass; a miss
+  stamps `SIGNAL LOGGED` and tears a burst of scanline interference across the view.
+- **Arrival and departure.** A planet rises into view as you arrive; the last world leaves,
+  warp rays streak outward from the reticle with a short flash, and the next world blooms
+  in. Landing fires two expanding rings. At a route junction the window shows both lanes —
+  the calm world on the left, the storm world on the right.
+- **Worlds with weather.** Banded gas giants get drifting cloud wisps, ocean worlds get
+  night-side city lights, ring worlds cast a ring shadow and carry an atmospheric limb,
+  metallic and icy bodies get specular highlights, moons are phase-shaded, and every world
+  gets a soft lens flare.
+- **A brass nameplate** on the cowl: region, world name, what the survey is, and where you
+  are in the run. Meridian Station gets its own plate, docked and undocked, with a beacon-lit
+  station and the destination world floating alongside.
 - **Hazards read without colour.** A signal world keeps a coral dashed ring around it; a
-  due signal lights a coral lamp in the glass. The nav chart repeats the same mark.
+  due signal lights a coral lamp on the frame. The nav chart repeats the same mark.
 - **The nav chart.** Four region columns, three worlds each, with counts per region. Every
   world is a button: its planet glyph, name, and survey tag, with a mint check or amber
   star sticker once it is known. Uncharted worlds keep a dashed halo and a muted glyph.
@@ -118,8 +138,8 @@ a question, never between reading the choices and answering.
 | Close world card | `Esc` |
 
 Touch: tap a world on the nav chart for its card, tap a choice to answer, then the wide
-**Fly to…** button. On mobile the observation deck sits above the question sheet and
-scrolls with the page.
+**Fly to…** button. On mobile the cockpit sits above the question sheet and scrolls with the
+page.
 
 ---
 
@@ -132,8 +152,10 @@ scrolls with the page.
 - **Visible focus** on paper (dark ring) and sky (amber ring); the prompt itself is focused
   programmatically but does not show a ring on arrival.
 - **Reduced motion** honours `prefers-reduced-motion` and an in-app Motion switch. Under
-  either, the window jump-cuts between worlds, warp streaks and landing blooms are
-  suppressed, and landing advances in 80 ms.
+  either, the cockpit becomes a still pane: the idle drift, parallax star layers, satellite
+  pass, cloud drift, beacon pulses, HUD sweep and scan chip are all switched off, the window
+  jump-cuts between worlds, warp streaks and landing blooms are suppressed, and landing
+  advances in 80 ms.
 - **Screen readers** get a live status region for answers, hints, signals, and crew, plus
   the full chart described per world.
 - **Contrast audit** (`npm run check:contrast`) checks every shipped text pair, including
@@ -148,9 +170,10 @@ scrolls with the page.
   pure reducer; arrival, departure, and landing are ephemeral UI state.
 - **Hand-drawn type**: Shantell Sans (display), Patrick Hand (body), IBM Plex Mono
   (labels), all self-hosted through Fontsource. No font CDN.
-- **SVG illustration**: the observation window (worlds, rings, moons, nebulae, station,
-  ship) and the nav chart are inline SVG. The starfield is seeded, so it is stable between
-  renders.
+- **SVG illustration**: the cockpit is two inline SVG layers — a slice-fitted scene (worlds,
+  rings, moons, nebulae, station, ship, warp) and a stretch-fitted frame (brass, cowl, rivets,
+  vents) — with an HTML HUD and nameplate on top. The three starfield layers are seeded, so
+  they are stable between renders.
 - **Web Audio** for the ambient hum, radio chatter, and small feedback pings. Audio starts
   from a user gesture and can be switched off at any time.
 - **localStorage** persists the expedition (`questionspace.session.v2`), sound, and motion
@@ -195,7 +218,7 @@ Pages is configured with **GitHub Actions** as its source. The live site is
 src/
   App.tsx                 phase routing, keyboard map, travel/landing, SR status
   components/
-    StarMap.tsx           observation window: worlds, station, junction, nav chart, card
+    StarMap.tsx           cockpit: canopy frame, HUD, worlds, station, junction, nav chart
     Console.tsx           question loop, choices, scan/skip/retry, feedback readout
     Briefing.tsx          launch screen, crew intro, rules
     Branch.tsx            quiet/storm lane choice

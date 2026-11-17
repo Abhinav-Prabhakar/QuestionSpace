@@ -436,77 +436,245 @@ svg {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  border: 2px solid rgba(243, 236, 220, 0.24);
-  border-radius: 20px 26px 18px 28px / 26px 18px 28px 20px;
-  background: #060b16;
+  border: 2px solid #17110a;
+  border-radius: 16px 20px 14px 22px / 20px 14px 22px 16px;
+  background: #04070e;
   overflow: hidden;
+  isolation: isolate;
   box-shadow:
-    inset 0 0 60px rgba(3, 7, 15, 0.92),
-    inset 0 0 0 6px rgba(10, 17, 31, 0.9),
-    0 3px 0 rgba(0, 0, 0, 0.35);
+    inset 0 0 70px rgba(3, 7, 15, 0.95),
+    0 4px 0 rgba(0, 0, 0, 0.42);
 }
 
-.viewport-svg {
+.viewport-svg,
+.viewport-frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
+.viewport-frame {
+  z-index: 2;
+  pointer-events: none;
+}
+
 .viewport-glare {
   position: absolute;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
+  border-radius: inherit;
   background:
-    linear-gradient(116deg, transparent 34%, rgba(255, 255, 255, 0.05) 44%, transparent 52%),
-    radial-gradient(120% 90% at 50% 50%, transparent 58%, rgba(3, 7, 15, 0.5) 100%);
-  mix-blend-mode: screen;
-  opacity: 0.8;
+    linear-gradient(112deg, transparent 26%, rgba(255, 255, 255, 0.08) 38%, rgba(255, 255, 255, 0.02) 44%, transparent 53%),
+    linear-gradient(62deg, transparent 62%, rgba(255, 255, 255, 0.045) 74%, transparent 82%),
+    radial-gradient(130% 95% at 50% 46%, transparent 52%, rgba(3, 7, 15, 0.55) 100%);
 }
 
-.rivet {
+.scene-drift {
+  animation: sceneDrift 21s ease-in-out infinite alternate;
+}
+
+.viewport.is-travelling .scene-shake {
+  animation: sceneShake 0.55s ease-out both;
+}
+
+.viewport.is-landing .scene-shake {
+  animation: sceneBump 0.5s ease-out both;
+}
+
+.viewport.is-travelling::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(circle at 52% 47%, rgba(255, 246, 224, 0.3), rgba(255, 209, 102, 0.08) 34%, transparent 62%);
+  animation: warpFlash 0.72s ease-out both;
+}
+
+.sky-far {
+  animation: skyDrift 46s ease-in-out infinite alternate;
+}
+
+.sky-mid {
+  animation: skyDrift 32s ease-in-out infinite alternate-reverse;
+}
+
+.sky-near {
+  animation: skyDrift 24s ease-in-out infinite alternate;
+}
+
+.sky-satellite {
+  opacity: 0;
+  animation: satellitePass 38s linear infinite 8s;
+}
+
+/* HUD ------------------------------------------------------------------- */
+
+.hud-tape {
   position: absolute;
   z-index: 4;
-  width: 9px;
+  top: calc(10% + 10px);
+  left: 50%;
+  width: 190px;
+  padding: 3px 8px 4px;
+  transform: translateX(-50%) rotate(-0.4deg);
+  background: rgba(6, 10, 18, 0.5);
+  border: 1px solid rgba(243, 236, 220, 0.18);
+  border-radius: 7px;
+  text-align: center;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+.hud-tape-ticks {
+  display: block;
+  height: 6px;
+  margin-bottom: 1px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(243, 236, 220, 0.42) 0 1px,
+    transparent 1px 15.8px
+  );
+}
+
+.hud-tape-mark {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 2px;
   height: 9px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 28%, #f4dfb4, #a3854f 55%, #4a3a20 100%);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.55);
+  background: var(--amber);
+  transform: translateX(-50%);
+}
+
+.hud-tape-text {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--chalk-2);
+}
+
+.hud-telemetry {
+  position: absolute;
+  z-index: 4;
+  right: 3.6%;
+  bottom: calc(16% + 6px);
+  margin: 0;
+  text-align: right;
   pointer-events: none;
 }
 
-.rivet--tl {
-  top: 8px;
-  left: 8px;
+.hud-telemetry p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  line-height: 1.45;
+  letter-spacing: 0.14em;
+  color: rgba(203, 211, 226, 0.72);
+  text-shadow: 0 1px 3px rgba(3, 7, 15, 0.9);
 }
 
-.rivet--tr {
-  top: 8px;
-  right: 8px;
+.hud-telemetry p.is-dim {
+  color: rgba(203, 211, 226, 0.4);
 }
 
-.rivet--bl {
-  bottom: 8px;
-  left: 8px;
+.hud-telemetry::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin-top: 4px;
+  background: rgba(243, 236, 220, 0.18);
 }
 
-.rivet--br {
-  bottom: 8px;
-  right: 8px;
+.hud-stamp {
+  position: absolute;
+  z-index: 5;
+  top: 44%;
+  left: 6.5%;
+  margin: 0;
+  padding: 4px 10px 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 2px dashed currentColor;
+  border-radius: 4px 8px 5px 7px;
+  transform: rotate(-7deg);
+  animation: stampIn 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  pointer-events: none;
 }
+
+.hud-stamp.is-ok {
+  color: #9df3d5;
+  background: rgba(9, 40, 31, 0.62);
+  box-shadow: 0 0 18px rgba(99, 230, 195, 0.22);
+}
+
+.hud-stamp.is-bad {
+  color: #ffbdaf;
+  background: rgba(52, 17, 12, 0.66);
+  box-shadow: 0 0 18px rgba(255, 141, 122, 0.22);
+}
+
+.hud-interference {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 141, 122, 0.1) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(90deg, transparent, rgba(255, 141, 122, 0.16), transparent);
+  animation: interference 0.55s steps(5, end) both;
+}
+
+.hud-sweep {
+  transform-box: view-box;
+  transform-origin: 470px 298px;
+  animation: hudSweep 2.6s linear infinite;
+}
+
+.hud-scan {
+  position: absolute;
+  z-index: 4;
+  top: calc(10% + 52px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px 3px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: rgba(6, 10, 18, 0.6);
+  border: 1px solid rgba(255, 209, 102, 0.32);
+  border-radius: 4px;
+  pointer-events: none;
+  animation: lampPulse 2.2s ease-in-out infinite;
+}
+
+/* Plates and lamps ------------------------------------------------------ */
 
 .deck-plate {
   position: absolute;
   left: 14px;
-  bottom: 14px;
-  z-index: 3;
-  max-width: min(76%, 430px);
+  bottom: calc(12% + 6px);
+  z-index: 4;
+  max-width: min(66%, 400px);
   padding: 8px 13px 10px;
-  background: linear-gradient(180deg, rgba(9, 15, 27, 0.9), rgba(7, 12, 23, 0.8));
-  border: 1.5px solid rgba(243, 236, 220, 0.26);
+  background: linear-gradient(180deg, rgba(11, 18, 31, 0.92), rgba(7, 12, 23, 0.86));
+  border: 1.5px solid rgba(243, 236, 220, 0.28);
   border-radius: 11px 15px 10px 14px / 14px 10px 15px 11px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36);
-  backdrop-filter: blur(3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
 }
 
 .deck-plate::before {
@@ -549,19 +717,20 @@ svg {
 
 .signal-lamp {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
+  top: 13px;
+  right: 15px;
+  z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 5px 11px 5px 8px;
   font-family: var(--font-hand);
   font-size: 13.5px;
-  color: #ffdad3;
-  background: rgba(141, 51, 35, 0.34);
-  border: 1.5px solid rgba(255, 141, 122, 0.65);
+  color: #ffe2db;
+  background: rgba(74, 20, 12, 0.78);
+  border: 1.5px solid rgba(255, 141, 122, 0.8);
   border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
 
@@ -579,7 +748,7 @@ svg {
 .big-world {
   transform-box: fill-box;
   transform-origin: center;
-  animation: planetArrive 1.05s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  animation: planetArrive 0.85s cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
 .big-world.is-leaving {
@@ -597,22 +766,46 @@ svg {
   animation: signalTurn 26s linear infinite;
 }
 
+.big-clouds path {
+  transform-box: fill-box;
+  animation: cloudDrift 34s ease-in-out infinite alternate;
+}
+
+.station-beacon {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: beaconPulse 2.8s ease-in-out infinite;
+}
+
+.station-beacon--late {
+  animation-delay: 1.3s;
+}
+
 .warp line {
-  stroke: rgba(243, 236, 220, 0.5);
-  stroke-width: 1.4;
+  stroke: rgba(255, 246, 226, 0.9);
+  stroke-width: 2.6;
   stroke-linecap: round;
-  stroke-dasharray: 96 190;
-  animation: warpStreak 0.72s linear both;
+  stroke-dasharray: 34 300;
+  animation: warpStreak 0.82s linear both;
 }
 
 .warp line:nth-child(3n) {
-  stroke: rgba(255, 209, 102, 0.55);
-  stroke-width: 1.8;
-  stroke-dasharray: 130 240;
+  stroke: rgba(255, 209, 102, 0.92);
+  stroke-width: 3.2;
+  stroke-dasharray: 54 340;
 }
 
 .warp line:nth-child(2n) {
-  stroke-dasharray: 64 150;
+  stroke-dasharray: 20 260;
+  stroke-width: 2;
+}
+
+.warp-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  stroke-width: 2;
+  opacity: 0;
+  animation: warpCore 0.8s ease-out both;
 }
 
 .land-ring {
@@ -628,9 +821,205 @@ svg {
 }
 
 .viewport.is-still .big-world,
+.viewport.is-still .big-clouds path,
 .viewport.is-still .big-signal circle:first-child,
-.viewport.is-still .signal-lamp-dot {
+.viewport.is-still .signal-lamp-dot,
+.viewport.is-still .scene-drift,
+.viewport.is-still .scene-shake,
+.viewport.is-still .sky-far,
+.viewport.is-still .sky-mid,
+.viewport.is-still .sky-near,
+.viewport.is-still .sky-satellite,
+.viewport.is-still .station-beacon,
+.viewport.is-still .hud-sweep,
+.viewport.is-still .hud-scan,
+.viewport.is-still .hud-stamp {
   animation: none;
+}
+
+.viewport.is-still .hud-sweep {
+  display: none;
+}
+
+/* Motion ---------------------------------------------------------------- */
+
+@keyframes sceneDrift {
+  from {
+    transform: translate3d(-4px, 2px, 0);
+  }
+  to {
+    transform: translate3d(5px, -4px, 0);
+  }
+}
+
+@keyframes sceneShake {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  12% {
+    transform: translate3d(-4px, 3px, 0);
+  }
+  26% {
+    transform: translate3d(3px, -4px, 0);
+  }
+  42% {
+    transform: translate3d(-3px, -2px, 0);
+  }
+  58% {
+    transform: translate3d(4px, 2px, 0);
+  }
+  76% {
+    transform: translate3d(-2px, 1px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sceneBump {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  30% {
+    transform: translate3d(0, 5px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes skyDrift {
+  from {
+    transform: translate3d(-10px, 4px, 0);
+  }
+  to {
+    transform: translate3d(12px, -6px, 0);
+  }
+}
+
+@keyframes satellitePass {
+  0% {
+    transform: translate3d(70px, 80px, 0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.6;
+  }
+  56% {
+    transform: translate3d(740px, 300px, 0);
+    opacity: 0.6;
+  }
+  68%,
+  100% {
+    transform: translate3d(870px, 356px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes hudSweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes warpFlash {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes warpStreak {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+  18% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -380;
+  }
+}
+
+@keyframes warpCore {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes beaconPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cloudDrift {
+  from {
+    transform: translateX(-9px);
+  }
+  to {
+    transform: translateX(9px);
+  }
+}
+
+@keyframes stampIn {
+  0% {
+    opacity: 0;
+    transform: rotate(-12deg) scale(1.5);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-7deg) scale(1);
+  }
+}
+
+@keyframes interference {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  14% {
+    opacity: 0.95;
+    transform: translateX(-4px);
+  }
+  30% {
+    opacity: 0.24;
+    transform: translateX(3px);
+  }
+  46% {
+    opacity: 0.8;
+    transform: translateX(-2px);
+  }
+  62% {
+    opacity: 0.28;
+    transform: translateX(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
 }
 
 .junc-name {
@@ -1129,9 +1518,9 @@ svg {
 @keyframes planetArrive {
   0% {
     opacity: 0;
-    transform: scale(0.58) translateY(38px);
+    transform: scale(0.66) translateY(30px);
   }
-  55% {
+  35% {
     opacity: 1;
   }
   100% {
@@ -1151,19 +1540,7 @@ svg {
   }
 }
 
-@keyframes warpStreak {
-  0% {
-    opacity: 0;
-    stroke-dashoffset: 0;
-  }
-  25% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 0;
-    stroke-dashoffset: -720;
-  }
-}
+
 
 @keyframes landBloom {
   0% {
@@ -3234,8 +3611,14 @@ kbd {
   .deck {
     position: relative;
     top: 0;
-    height: min(68vh, 620px);
-    min-height: 500px;
+    height: auto;
+    min-height: 0;
+  }
+
+  .viewport {
+    flex: none;
+    height: min(48vw, 470px);
+    min-height: 320px;
   }
 
   .console-slot {
@@ -3363,31 +3746,53 @@ kbd {
   }
 
   .viewport {
-    border-radius: 16px 20px 14px 22px / 20px 14px 22px 16px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    border-radius: 14px 18px 12px 20px / 18px 12px 20px 14px;
     box-shadow:
       inset 0 0 46px rgba(3, 7, 15, 0.92),
-      inset 0 0 0 4px rgba(10, 17, 31, 0.9),
-      0 2px 0 rgba(0, 0, 0, 0.35);
+      0 2px 0 rgba(0, 0, 0, 0.4);
   }
 
   .deck-plate {
-    left: 10px;
-    bottom: 10px;
-    max-width: 80%;
-    padding: 6px 10px 8px;
+    left: 8px;
+    bottom: 7%;
+    max-width: 76%;
+    padding: 6px 10px 7px;
+  }
+
+  .hud-tape {
+    width: 156px;
+    padding: 2px 6px 3px;
+  }
+
+  .hud-tape-text {
+    font-size: 7.5px;
+    letter-spacing: 0.12em;
+  }
+
+  .hud-telemetry {
+    display: none;
+  }
+
+  .hud-stamp {
+    top: 30%;
+    left: 5%;
+    font-size: 9px;
+    letter-spacing: 0.14em;
   }
 
   .plate-kicker {
-    font-size: 8px;
-    letter-spacing: 0.11em;
+    display: none;
   }
 
   .plate-name {
-    font-size: 21px;
+    font-size: 19px;
   }
 
   .plate-sub {
-    font-size: 12.5px;
+    font-size: 11.5px;
   }
 
   .signal-lamp {

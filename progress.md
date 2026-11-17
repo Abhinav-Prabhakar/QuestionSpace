@@ -3,13 +3,87 @@
 A working log for QuestionSpace — decisions, visual rounds, measurements, and what is
 still open. Newest state first.
 
-**Status:** v2 loop complete, first-person observation window shipped, chart table, a11y and
-contrast passes complete, GitHub Pages deploy configured. `npm run check` and `npm run build`
-pass.
+**Status:** v2 loop complete, first-person cockpit shipped, chart table, a11y and contrast
+passes complete, GitHub Pages deploy configured. `npm run check` and `npm run build` pass.
 
 ---
 
-## 17 Nov 2026 — the observation window
+## 17 Nov 2026 — the cockpit
+
+### What changed
+
+The observation window was still a framed picture: a rounded border, four rivets in the
+corners, and a planet floating in it. The note was blunt — *not realistic enough at all,
+quite boring actually.* This round rebuilt the left panel as a **first-person cockpit** you
+sit inside, and kept every part of it hand-drawn.
+
+**The canopy**
+
+- The frame moved into its own SVG layer with `preserveAspectRatio="none"`, so the pillars,
+  canopy bow, cowl and glass edge stretch to hug the pane at any aspect. The scene layer
+  keeps `xMidYMid slice`, so planets stay circular regardless of the frame.
+- Brass gradient with brushed grain, a raised canopy bow with a latch, 13 rivets per side
+  (scaled with the frame), pillar grips, a leather glare shield with stitching seam, cowl
+  vents, and a three-switch bank.
+- An instrument strip along the bow: gauge ticks plus four status lamps.
+- Glass artefacts drawn over the scene: scratches, dust specks, and a two-pass raking glare.
+
+**The sky**
+
+- Three seeded star layers (260 / 120 / 34 stars) at different radii and opacities, each
+  drifting on its own slow parallax cycle, over a radial sky base and a rotated galactic
+  band. Three nebulae sit on the far and mid layers.
+- A satellite crosses the pane every 38 s.
+- The whole scene drifts ±5 px on a 21 s idle loop, so the view never looks like a still.
+
+**The HUD**
+
+- Heading tape (`HDG nnn° · V 12.4`) at the top centre, HTML so it stays crisp.
+- Corner target brackets and a reticle at a fixed scene point, plus a dashed range ring.
+- Telemetry at lower right: `RNG n.nn AU`, `SIG CLEAR / n DUE / ANOMALY`, `HULL NOMINAL`.
+- Scanning starts a rotating sweep inside the brackets, a timed arc around the range ring,
+  and a pulsing `Deep scan · eliminating` chip.
+- A correct answer stamps `SURVEY VERIFIED` in mint; a miss stamps `SIGNAL LOGGED` in coral
+  and tears a burst of scanline interference across the glass.
+
+**Travel and worlds**
+
+- Departure: warp rays radiate from the reticle with a radial flash, plus a physical shake
+  on the scene group. Arrival blooms two expanding rings.
+- Richer surfaces: drifting cloud wisps on banded/ocean/hazy/icy worlds, night-side city
+  lights on the ocean world, a ring shadow across ringed worlds, an atmospheric limb
+  gradient, specular highlights on ocean and metallic bodies, phase-shaded moons with halo
+  and highlight, and a lens flare on every non-field world.
+- Meridian Station gained two blinking beacons, and the debrief now returns to the station
+  with the last destination world hanging alongside.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `npm run check` | Typecheck + 25 tests + 36 contrast pairs pass |
+| `npm run build` | Succeeds (177 ms) |
+| 1440×900 | Frame hugs pane; tape, telemetry, plate and lamp all legible |
+| 1440×720 | Pane 331 px; frame still reads, HUD does not collide |
+| 1024×820 | Deck auto-height, viewport fixed at 470 px, frame intact |
+| 393×852 | Compact plate (kicker hidden), telemetry hidden, tape narrowed |
+| Junction | Lane names raised clear of the plate; labels readable |
+| Scan | Sweep + arc + chip render; chip and sweep anim |
+| Reduced motion | `.viewport` gets `is-still`; drift, sky layers, world, beacons → `animation-name: none` |
+| Screenshots | All 12 `docs/*.png` regenerated with the cockpit |
+
+### Open questions
+
+- The HUD is decorative: it says `HDG` and `RNG` but neither drives anything. Worth wiring
+  range to remaining distance or leaving it as set dressing?
+- `prefers-reduced-motion` currently kills the idle drift entirely. A very slow, low-amplitude
+  drift might still be comfortable — untested with real users.
+- The frame is stretched, so its stroke weights vary slightly with aspect. Acceptable now;
+  an alternative is three breakpoint-specific frames.
+
+---
+
+## Previous round — the observation window (superseded)
 
 ### What changed
 
