@@ -1497,7 +1497,7 @@ export function StarMap({
         <div className="deck-id">
           <CompassDoodle aria-hidden="true" />
           <div>
-            <p className="deck-kicker">Observation deck · sheet 01</p>
+            <p className="deck-kicker">Flight deck · sheet 01</p>
             <h2 className="deck-title" id="chart-heading">
               The Near Universe
             </h2>
